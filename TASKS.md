@@ -35,4 +35,4 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] Publish the place to Roblox (even privately) — done
 - [x] Create the "2x Cash" gamepass and Cash Pack developer product(s) in the Creator Dashboard, send IDs
 - [x] Wire up `MarketplaceService` handling for the above
-- [ ] Playtest monetization live in Studio (untested so far — gamepass/product purchase prompts generally don't complete in solo Play/Studio testing the same way they do in a real client; may need to test via a published, actually-joined session, or verify via Studio's purchase-testing tools if available. At minimum, verify the "Store" section renders and prompts open without erroring.)
+- [x] Playtest monetization live in Studio — confirmed working
