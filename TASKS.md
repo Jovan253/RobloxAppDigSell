@@ -14,9 +14,13 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] 5. DataStore persistence — save/load, autosave, save-on-leave/shutdown
 - [x] 6. Rebirth system — UI added as a section in the shop panel (2-click confirm), wired to `Remotes.Rebirth`
 - [x] 7. Leaderboard — `LeaderboardService` (OrderedDataStore, all-time, updates every 30s) + `LeaderboardUi.client.luau` panel ("Ranks" button / "L" key)
-- [ ] 8. Monetization — gamepasses + developer products
-- [ ] 9. Polish — sound/particle feedback on mining, mobile controls check, real art pass (current ore nodes are placeholder grey blocks)
+- [ ] 8. Monetization — 2x Cash gamepass + Cash Pack developer products (decided 2026-09-22; Auto-Mine gamepass deferred to a future idea, not in MVP scope)
+- [ ] 9. Polish — expect this to grow beyond the original "sound/particles/mobile-check/art pass" framing; user has more feature ideas for the game's direction, to be scoped when we get there
 - [ ] 10. Playtest, bugfix, thumbnail/icon, store page copy, soft launch
+
+## Future ideas (not in MVP scope)
+
+- Auto-Mine gamepass — periodically auto-mines the nearest unlocked ore without clicking, for players who own it
 
 ## Immediate next steps
 
@@ -28,3 +32,6 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] Playtest the Rebirth UI live in Studio — confirmed working (tested with `Config.Rebirth.CashRequired` temporarily lowered to 50, reverted to 50000 after)
 - [x] Build the leaderboard (`LeaderboardService` + `LeaderboardUi`)
 - [x] Playtest the leaderboard live in Studio — confirmed: Ranks button now visible and working (fixed by disabling the default PlayerList overlay that was hiding it — commit `e28cf21`)
+- [ ] Publish the place to Roblox (even privately) — required before gamepasses/dev products can be created; not done yet
+- [ ] Create the "2x Cash" gamepass and Cash Pack developer product(s) in the Creator Dashboard, send IDs
+- [ ] Wire up `MarketplaceService` handling for the above once IDs are provided
