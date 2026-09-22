@@ -53,4 +53,16 @@ Config.LeaderboardStoreName = "DigAndSellLeaderboard_v1"
 Config.LeaderboardUpdateInterval = 30 -- seconds
 Config.LeaderboardDisplayCount = 10
 
+-- Real IDs from the Creator Dashboard (Monetization > Passes / Developer
+-- Products). Shared here so server (ownership checks / ProcessReceipt) and
+-- client (purchase-prompt buttons) can't drift out of sync on IDs.
+Config.GamePasses = {
+	DoubleCash = 1988462502,
+}
+
+Config.CashProducts = {
+	{ ProductId = 3714204369, Name = "Small Pack", Cash = 5000 },
+	{ ProductId = 3714204408, Name = "Huge Pack", Cash = 50000 },
+}
+
 return Config

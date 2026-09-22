@@ -6,6 +6,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
+local MarketplaceAPI = game:GetService("MarketplaceService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
@@ -18,6 +19,7 @@ local rebirthsValue = leaderstats:WaitForChild("Rebirths")
 local playerData = player:WaitForChild("PlayerData")
 local pickaxeTierValue = playerData:WaitForChild("PickaxeTier")
 local unlockedZonesValue = playerData:WaitForChild("UnlockedZones")
+local ownsDoubleCashValue = playerData:WaitForChild("OwnsDoubleCash")
 
 local OWNED_COLOR = Color3.fromRGB(60, 60, 60)
 local AFFORDABLE_COLOR = Color3.fromRGB(35, 120, 60)
@@ -233,6 +235,44 @@ rebirthButton.MouseButton1Click:Connect(function()
 	Remotes.Rebirth:FireServer()
 end)
 
+addSectionHeader("Store (Robux)", 300)
+
+local doubleCashLabel, doubleCashButton = addRow(301)
+doubleCashButton.MouseButton1Click:Connect(function()
+	if ownsDoubleCashValue.Value then
+		return
+	end
+	MarketplaceAPI:PromptGamePassPurchase(player, Config.GamePasses.DoubleCash)
+end)
+
+local cashProductRows = {}
+for i, product in Config.CashProducts do
+	local label, button = addRow(301 + i)
+	label.Text = ("%s -- %d Cash"):format(product.Name, product.Cash)
+	button.Text = "Buy"
+	button.BackgroundColor3 = AFFORDABLE_COLOR
+	button.MouseButton1Click:Connect(function()
+		MarketplaceAPI:PromptProductPurchase(player, product.ProductId)
+	end)
+	cashProductRows[i] = { label = label, button = button }
+end
+
+local function updateStoreSection()
+	if ownsDoubleCashValue.Value then
+		doubleCashLabel.Text = "2x Cash (owned)"
+		doubleCashButton.Text = "Owned"
+		doubleCashButton.Active = false
+		doubleCashButton.BackgroundColor3 = OWNED_COLOR
+	else
+		doubleCashLabel.Text = "2x Cash -- doubles all mining cash"
+		doubleCashButton.Text = "Buy"
+		doubleCashButton.Active = true
+		doubleCashButton.BackgroundColor3 = AFFORDABLE_COLOR
+	end
+end
+
+ownsDoubleCashValue:GetPropertyChangedSignal("Value"):Connect(updateStoreSection)
+
 local function refresh()
 	local cash = cashValue.Value
 	local currentTier = pickaxeTierValue.Value
@@ -274,6 +314,7 @@ local function refresh()
 	end
 
 	updateRebirthRow()
+	updateStoreSection()
 end
 
 cashValue:GetPropertyChangedSignal("Value"):Connect(refresh)

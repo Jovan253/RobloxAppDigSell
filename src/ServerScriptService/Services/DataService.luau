@@ -60,6 +60,14 @@ local function setupPlayerData(player, profile)
 	unlockedZones.Name = "UnlockedZones"
 	unlockedZones.Value = table.concat(profile.UnlockedZones, ",")
 	unlockedZones.Parent = playerData
+
+	-- Not part of `profile`/DataStore -- gamepass ownership is authoritative
+	-- on Roblox's side and re-checked by MarketplaceService each session.
+	-- This just mirrors that check for the client's shop UI to read.
+	local ownsDoubleCash = Instance.new("BoolValue")
+	ownsDoubleCash.Name = "OwnsDoubleCash"
+	ownsDoubleCash.Value = false
+	ownsDoubleCash.Parent = playerData
 end
 
 function DataService.GetProfile(player)
@@ -107,6 +115,13 @@ function DataService.SetUnlockedZones(player, zones)
 	local playerData = player:FindFirstChild("PlayerData")
 	if playerData then
 		playerData.UnlockedZones.Value = table.concat(zones, ",")
+	end
+end
+
+function DataService.SetOwnsDoubleCash(player, owns)
+	local playerData = player:FindFirstChild("PlayerData")
+	if playerData then
+		playerData.OwnsDoubleCash.Value = owns
 	end
 end
 

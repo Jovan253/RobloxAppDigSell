@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local DataService = require(script.Parent.DataService)
+local MarketplaceService = require(script.Parent.MarketplaceService)
 
 local ORE_TAG = "OreNode"
 
@@ -101,7 +102,10 @@ local function onNodeClicked(node, player)
 	node:SetAttribute("Mining", true)
 
 	local baseValue = node:GetAttribute("CashValue") or 1
-	local reward = baseValue * pickaxeMultiplier(player) * rebirthMultiplier(player)
+	local reward = baseValue
+		* pickaxeMultiplier(player)
+		* rebirthMultiplier(player)
+		* MarketplaceService.GetCashMultiplier(player)
 	DataService.AddCash(player, reward)
 
 	local click = node:FindFirstChildOfClass("ClickDetector")
