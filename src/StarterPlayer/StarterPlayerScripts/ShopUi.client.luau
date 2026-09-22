@@ -14,6 +14,7 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local leaderstats = player:WaitForChild("leaderstats")
 local cashValue = leaderstats:WaitForChild("Cash")
+local rebirthsValue = leaderstats:WaitForChild("Rebirths")
 local playerData = player:WaitForChild("PlayerData")
 local pickaxeTierValue = playerData:WaitForChild("PickaxeTier")
 local unlockedZonesValue = playerData:WaitForChild("UnlockedZones")
@@ -188,6 +189,50 @@ for i, zoneConfig in Config.Zones do
 	zoneRows[zoneConfig.Name] = { label = label, button = button, config = zoneConfig }
 end
 
+addSectionHeader("Rebirth", 200)
+local rebirthLabel, rebirthButton = addRow(201)
+
+-- Rebirth wipes progress, so require a second click to confirm rather than
+-- firing on the first press. Resets automatically if not confirmed in time.
+local rebirthPending = false
+
+local function updateRebirthRow()
+	local rebirths = rebirthsValue.Value
+	local multiplier = 1 + rebirths * Config.Rebirth.MultiplierPerRebirth
+	rebirthLabel.Text = ("Rebirths: %d (x%.1f cash)"):format(rebirths, multiplier)
+
+	if rebirthPending then
+		rebirthButton.Text = "Confirm?"
+		rebirthButton.Active = true
+		rebirthButton.BackgroundColor3 = UNAFFORDABLE_COLOR
+	elseif cashValue.Value >= Config.Rebirth.CashRequired then
+		rebirthButton.Text = "Rebirth"
+		rebirthButton.Active = true
+		rebirthButton.BackgroundColor3 = AFFORDABLE_COLOR
+	else
+		rebirthButton.Text = ("Need %d"):format(Config.Rebirth.CashRequired)
+		rebirthButton.Active = false
+		rebirthButton.BackgroundColor3 = OWNED_COLOR
+	end
+end
+
+rebirthButton.MouseButton1Click:Connect(function()
+	if not rebirthPending then
+		rebirthPending = true
+		updateRebirthRow()
+		task.delay(4, function()
+			if rebirthPending then
+				rebirthPending = false
+				updateRebirthRow()
+			end
+		end)
+		return
+	end
+
+	rebirthPending = false
+	Remotes.Rebirth:FireServer()
+end)
+
 local function refresh()
 	local cash = cashValue.Value
 	local currentTier = pickaxeTierValue.Value
@@ -227,11 +272,14 @@ local function refresh()
 			button.BackgroundColor3 = cash >= config.UnlockCost and AFFORDABLE_COLOR or UNAFFORDABLE_COLOR
 		end
 	end
+
+	updateRebirthRow()
 end
 
 cashValue:GetPropertyChangedSignal("Value"):Connect(refresh)
 pickaxeTierValue:GetPropertyChangedSignal("Value"):Connect(refresh)
 unlockedZonesValue:GetPropertyChangedSignal("Value"):Connect(refresh)
+rebirthsValue:GetPropertyChangedSignal("Value"):Connect(refresh)
 refresh()
 
 local function setOpen(open)
