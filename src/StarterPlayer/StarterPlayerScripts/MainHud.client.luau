@@ -1,6 +1,12 @@
--- Minimal always-on Cash readout. Shop/Rebirth menus are the next milestone
--- and are best built visually in Studio's UI editor rather than by hand here.
+-- Minimal always-on Cash readout. Also disables Roblox's built-in PlayerList
+-- overlay: having a `leaderstats` folder (see DataService) makes it
+-- auto-appear in the top-right corner, which overlaps and hides our own
+-- Shop/Ranks buttons there. Our custom UI (this HUD + LeaderboardUi) fully
+-- replaces what it showed.
 local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
 
 local player = Players.LocalPlayer
 
