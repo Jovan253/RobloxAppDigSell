@@ -6,11 +6,11 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 
 - [x] 1. Setup — Rojo/git scaffolding
 - [x] 2. Core mining loop — ore nodes, click → cash, respawn
-- [ ] 3. Currency + shop UI
+- [x] 3. Currency + shop UI
   - [x] Cash HUD
-  - [ ] Shop UI (pickaxe upgrades) — server logic (`ShopService`) already done, needs a `StarterGui` menu wired to `Remotes.PurchaseUpgrade`
-  - [ ] Zone-unlock UI — server logic already done, needs UI wired to `Remotes.PurchaseZone`
-- [x] 4. Zones/progression — 3 zones scaffolded server-side, gated by cash (no UI yet to trigger unlock, see above)
+  - [x] Shop UI (pickaxe upgrades) — `ShopUi.client.luau`, toggle button / "B" key
+  - [x] Zone-unlock UI — same panel, wired to `Remotes.PurchaseZone`
+- [x] 4. Zones/progression — 3 zones scaffolded server-side, gated by cash, unlockable from the shop UI
 - [x] 5. DataStore persistence — save/load, autosave, save-on-leave/shutdown
 - [ ] 6. Rebirth system — server logic (`RebirthService`) done, needs UI wired to `Remotes.Rebirth`
 - [ ] 7. Leaderboard (`OrderedDataStore` + display)
@@ -21,6 +21,7 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 ## Immediate next steps
 
 - [x] Open in Roblox Studio (Rojo plugin installed, `rojo serve` running), playtest the core loop — confirmed live: ore mining + cash gain works
-- [ ] Retest `PurchaseUpgrade`/`PurchaseZone`/`Rebirth` remotes via Command Bar (fixed a `Remotes` folder/ModuleScript naming collision that broke them — see commit `6e36594`)
-- [ ] Build Shop UI (StarterGui) wired to `PurchaseUpgrade`/`PurchaseZone`
+- [x] Retest `PurchaseUpgrade` remote via Command Bar — confirmed working after the `Remotes` naming-collision fix (commit `6e36594`)
+- [x] Build Shop UI (StarterGui) wired to `PurchaseUpgrade`/`PurchaseZone`
+- [ ] Playtest the new Shop UI live in Studio (untested so far — buy a pickaxe tier and a zone unlock through the panel, not just the command bar)
 - [ ] Build Rebirth UI wired to `Rebirth`
