@@ -25,6 +25,6 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] Build Shop UI (StarterGui) wired to `PurchaseUpgrade`/`PurchaseZone`
 - [x] Playtest the Shop UI live in Studio — confirmed: pickaxe purchase and zone unlock both work
 - [x] Build Rebirth UI wired to `Rebirth`
-- [ ] Playtest the Rebirth UI live in Studio (untested so far — needs 50,000 cash to trigger; consider temporarily lowering `Config.Rebirth.CashRequired` in Studio to test faster, then reverting)
+- [x] Playtest the Rebirth UI live in Studio — confirmed working (tested with `Config.Rebirth.CashRequired` temporarily lowered to 50, reverted to 50000 after)
 - [x] Build the leaderboard (`LeaderboardService` + `LeaderboardUi`)
 - [x] Playtest the leaderboard live in Studio — confirmed: Ranks button now visible and working (fixed by disabling the default PlayerList overlay that was hiding it — commit `e28cf21`)
