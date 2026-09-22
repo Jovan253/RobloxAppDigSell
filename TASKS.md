@@ -27,4 +27,4 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] Build Rebirth UI wired to `Rebirth`
 - [ ] Playtest the Rebirth UI live in Studio (untested so far — needs 50,000 cash to trigger; consider temporarily lowering `Config.Rebirth.CashRequired` in Studio to test faster, then reverting)
 - [x] Build the leaderboard (`LeaderboardService` + `LeaderboardUi`)
-- [ ] Playtest the leaderboard live in Studio (untested so far — the "Ranks" panel should show your name/cash within ~30s in Team Test; a solo Play session should still show one entry for yourself since OrderedDataStore calls go through even solo, given "Enable Studio Access to API Services" is on)
+- [x] Playtest the leaderboard live in Studio — confirmed: Ranks button now visible and working (fixed by disabling the default PlayerList overlay that was hiding it — commit `e28cf21`)
