@@ -15,8 +15,23 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] 6. Rebirth system — UI added as a section in the shop panel (2-click confirm), wired to `Remotes.Rebirth`
 - [x] 7. Leaderboard — `LeaderboardService` (OrderedDataStore, all-time, updates every 30s) + `LeaderboardUi.client.luau` panel ("Ranks" button / "L" key)
 - [x] 8. Monetization — 2x Cash gamepass (1988462502) + Cash Pack developer products (Small 3714204369/5000, Huge 3714204408/50000), `MarketplaceService` + shop "Store" section
-- [ ] 9. Polish — expect this to grow beyond the original "sound/particles/mobile-check/art pass" framing; user has more feature ideas for the game's direction, to be scoped when we get there
+- [ ] 9. Polish — in progress, see "Polish: map & Dark Mines" below
 - [ ] 10. Playtest, bugfix, thumbnail/icon, store page copy, soft launch
+
+## Polish: map & Dark Mines (decided 2026-09-22)
+
+User's ideas: fix the grey/flat map, spread zones/ores out more, more zones, more ore variety, better-looking ore, and a horror "Dark Mines" zone with a parkour-over-lava section and a "jumpscare prank" monetization item. Design decisions made: jumpscare = buyer pranks nearby players (developer product, not ambient); lava fall = respawn at last checkpoint, no cash loss; 4 total zones (Dark Mines is the new top tier); ore rarity = multiple weighted ore types per zone.
+
+- [x] Rework zone data model in `Config.luau` — real room dimensions, materials/colors, per-zone ore type tables with rarity weights
+- [x] Rework `MiningService` zone building — real rooms (floor/walls/ceiling), ore scattered across the floor instead of grid-aligned, zones spaced further apart and much larger
+- [x] Ore visuals — material/color per ore type, glowing accent + light on rare types, varied size/rotation instead of uniform grey blocks
+- [x] Add Dark Mines zone (Zone4, 25000 cost) — safe entrance ore, lava pit, zigzag jump platforms, 3-stage checkpoint system, treasure platform with rare Cursed Ruby ore
+- [x] Lava fall → teleport to last checkpoint + `ZoneToast` "you fell in" message
+- [x] Jumpscare Prank plumbing — `MarketplaceService` grant logic + `JumpscareEffect.client.luau` (flash effect; sound left blank, needs a real asset ID), gated behind `Config.JumpscareProductId` (currently nil)
+- [ ] Playtest all of the above live in Studio — **none of this has been tested live yet**, this was a large change built in one pass. Expect the Dark Mines jump-platform spacing/lava depth specifically to need tuning (sized for default WalkSpeed/JumpPower, not verified in-engine)
+- [ ] Create the "Jumpscare Prank" developer product in the Creator Dashboard, send the ID, so it can be wired into `Config.JumpscareProductId`
+- [ ] Find/set a real sound asset ID for the jumpscare effect (`JumpscareEffect.client.luau`'s `SoundId` is blank)
+- [ ] Gotcha if re-testing: `MiningService` only builds `MiningZones` if that folder doesn't already exist in Workspace — if Studio's Edit-mode Workspace somehow still has a leftover one from before, delete it manually or the old map will keep showing
 
 ## Future ideas (not in MVP scope)
 
