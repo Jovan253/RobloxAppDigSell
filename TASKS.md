@@ -20,6 +20,7 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 
 ## Immediate next steps
 
-- [ ] Open in Roblox Studio (Rojo plugin installed, `rojo serve` running), playtest the core loop — untested live so far
+- [x] Open in Roblox Studio (Rojo plugin installed, `rojo serve` running), playtest the core loop — confirmed live: ore mining + cash gain works
+- [ ] Retest `PurchaseUpgrade`/`PurchaseZone`/`Rebirth` remotes via Command Bar (fixed a `Remotes` folder/ModuleScript naming collision that broke them — see commit `6e36594`)
 - [ ] Build Shop UI (StarterGui) wired to `PurchaseUpgrade`/`PurchaseZone`
 - [ ] Build Rebirth UI wired to `Rebirth`
