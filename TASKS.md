@@ -13,7 +13,7 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] 4. Zones/progression — 3 zones scaffolded server-side, gated by cash, unlockable from the shop UI
 - [x] 5. DataStore persistence — save/load, autosave, save-on-leave/shutdown
 - [x] 6. Rebirth system — UI added as a section in the shop panel (2-click confirm), wired to `Remotes.Rebirth`
-- [ ] 7. Leaderboard (`OrderedDataStore` + display)
+- [x] 7. Leaderboard — `LeaderboardService` (OrderedDataStore, all-time, updates every 30s) + `LeaderboardUi.client.luau` panel ("Ranks" button / "L" key)
 - [ ] 8. Monetization — gamepasses + developer products
 - [ ] 9. Polish — sound/particle feedback on mining, mobile controls check, real art pass (current ore nodes are placeholder grey blocks)
 - [ ] 10. Playtest, bugfix, thumbnail/icon, store page copy, soft launch
@@ -26,3 +26,5 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] Playtest the Shop UI live in Studio — confirmed: pickaxe purchase and zone unlock both work
 - [x] Build Rebirth UI wired to `Rebirth`
 - [ ] Playtest the Rebirth UI live in Studio (untested so far — needs 50,000 cash to trigger; consider temporarily lowering `Config.Rebirth.CashRequired` in Studio to test faster, then reverting)
+- [x] Build the leaderboard (`LeaderboardService` + `LeaderboardUi`)
+- [ ] Playtest the leaderboard live in Studio (untested so far — the "Ranks" panel should show your name/cash within ~30s in Team Test; a solo Play session should still show one entry for yourself since OrderedDataStore calls go through even solo, given "Enable Studio Access to API Services" is on)
