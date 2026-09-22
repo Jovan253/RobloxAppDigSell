@@ -12,7 +12,7 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
   - [x] Zone-unlock UI — same panel, wired to `Remotes.PurchaseZone`
 - [x] 4. Zones/progression — 3 zones scaffolded server-side, gated by cash, unlockable from the shop UI
 - [x] 5. DataStore persistence — save/load, autosave, save-on-leave/shutdown
-- [ ] 6. Rebirth system — server logic (`RebirthService`) done, needs UI wired to `Remotes.Rebirth`
+- [x] 6. Rebirth system — UI added as a section in the shop panel (2-click confirm), wired to `Remotes.Rebirth`
 - [ ] 7. Leaderboard (`OrderedDataStore` + display)
 - [ ] 8. Monetization — gamepasses + developer products
 - [ ] 9. Polish — sound/particle feedback on mining, mobile controls check, real art pass (current ore nodes are placeholder grey blocks)
@@ -23,5 +23,6 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] Open in Roblox Studio (Rojo plugin installed, `rojo serve` running), playtest the core loop — confirmed live: ore mining + cash gain works
 - [x] Retest `PurchaseUpgrade` remote via Command Bar — confirmed working after the `Remotes` naming-collision fix (commit `6e36594`)
 - [x] Build Shop UI (StarterGui) wired to `PurchaseUpgrade`/`PurchaseZone`
-- [ ] Playtest the new Shop UI live in Studio (untested so far — buy a pickaxe tier and a zone unlock through the panel, not just the command bar)
-- [ ] Build Rebirth UI wired to `Rebirth`
+- [x] Playtest the Shop UI live in Studio — confirmed: pickaxe purchase and zone unlock both work
+- [x] Build Rebirth UI wired to `Rebirth`
+- [ ] Playtest the Rebirth UI live in Studio (untested so far — needs 50,000 cash to trigger; consider temporarily lowering `Config.Rebirth.CashRequired` in Studio to test faster, then reverting)
