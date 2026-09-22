@@ -9,9 +9,11 @@ local REMOTE_NAMES = { "PurchaseUpgrade", "PurchaseZone", "Rebirth" }
 local remotesFolder
 
 if RunService:IsServer() then
+	-- Parented under this ModuleScript (not ReplicatedStorage) so the folder
+	-- name can't collide with the "Remotes" ModuleScript instance itself.
 	remotesFolder = Instance.new("Folder")
-	remotesFolder.Name = "Remotes"
-	remotesFolder.Parent = script.Parent
+	remotesFolder.Name = "RemoteEvents"
+	remotesFolder.Parent = script
 
 	for _, name in REMOTE_NAMES do
 		local event = Instance.new("RemoteEvent")
@@ -19,7 +21,7 @@ if RunService:IsServer() then
 		event.Parent = remotesFolder
 	end
 else
-	remotesFolder = script.Parent:WaitForChild("Remotes")
+	remotesFolder = script:WaitForChild("RemoteEvents")
 end
 
 local Remotes = {}
