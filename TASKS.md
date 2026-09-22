@@ -14,7 +14,7 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] 5. DataStore persistence — save/load, autosave, save-on-leave/shutdown
 - [x] 6. Rebirth system — UI added as a section in the shop panel (2-click confirm), wired to `Remotes.Rebirth`
 - [x] 7. Leaderboard — `LeaderboardService` (OrderedDataStore, all-time, updates every 30s) + `LeaderboardUi.client.luau` panel ("Ranks" button / "L" key)
-- [ ] 8. Monetization — 2x Cash gamepass + Cash Pack developer products (decided 2026-09-22; Auto-Mine gamepass deferred to a future idea, not in MVP scope)
+- [x] 8. Monetization — 2x Cash gamepass (1988462502) + Cash Pack developer products (Small 3714204369/5000, Huge 3714204408/50000), `MarketplaceService` + shop "Store" section
 - [ ] 9. Polish — expect this to grow beyond the original "sound/particles/mobile-check/art pass" framing; user has more feature ideas for the game's direction, to be scoped when we get there
 - [ ] 10. Playtest, bugfix, thumbnail/icon, store page copy, soft launch
 
@@ -32,6 +32,7 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] Playtest the Rebirth UI live in Studio — confirmed working (tested with `Config.Rebirth.CashRequired` temporarily lowered to 50, reverted to 50000 after)
 - [x] Build the leaderboard (`LeaderboardService` + `LeaderboardUi`)
 - [x] Playtest the leaderboard live in Studio — confirmed: Ranks button now visible and working (fixed by disabling the default PlayerList overlay that was hiding it — commit `e28cf21`)
-- [ ] Publish the place to Roblox (even privately) — required before gamepasses/dev products can be created; not done yet
-- [ ] Create the "2x Cash" gamepass and Cash Pack developer product(s) in the Creator Dashboard, send IDs
-- [ ] Wire up `MarketplaceService` handling for the above once IDs are provided
+- [x] Publish the place to Roblox (even privately) — done
+- [x] Create the "2x Cash" gamepass and Cash Pack developer product(s) in the Creator Dashboard, send IDs
+- [x] Wire up `MarketplaceService` handling for the above
+- [ ] Playtest monetization live in Studio (untested so far — gamepass/product purchase prompts generally don't complete in solo Play/Studio testing the same way they do in a real client; may need to test via a published, actually-joined session, or verify via Studio's purchase-testing tools if available. At minimum, verify the "Store" section renders and prompts open without erroring.)
