@@ -1,5 +1,9 @@
 -- Owns per-player progress: load on join, save on leave/autosave/shutdown,
 -- and exposes the mutation API other services use (AddCash, SetCash, ...).
+-- Cash/Rebirths mirror into `leaderstats` (shows in Roblox's player list);
+-- PickaxeTier/UnlockedZones mirror into a `PlayerData` folder instead, so
+-- client UI (the shop) can read current progress via plain replication
+-- instead of a RemoteFunction round-trip.
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -42,6 +46,22 @@ local function setupLeaderstats(player, profile)
 	rebirths.Parent = leaderstats
 end
 
+local function setupPlayerData(player, profile)
+	local playerData = Instance.new("Folder")
+	playerData.Name = "PlayerData"
+	playerData.Parent = player
+
+	local pickaxeTier = Instance.new("IntValue")
+	pickaxeTier.Name = "PickaxeTier"
+	pickaxeTier.Value = profile.PickaxeTier
+	pickaxeTier.Parent = playerData
+
+	local unlockedZones = Instance.new("StringValue")
+	unlockedZones.Name = "UnlockedZones"
+	unlockedZones.Value = table.concat(profile.UnlockedZones, ",")
+	unlockedZones.Parent = playerData
+end
+
 function DataService.GetProfile(player)
 	return profiles[player]
 end
@@ -64,6 +84,30 @@ function DataService.AddCash(player, amount)
 		return
 	end
 	DataService.SetCash(player, profile.Cash + amount)
+end
+
+function DataService.SetPickaxeTier(player, tier)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	profile.PickaxeTier = tier
+	local playerData = player:FindFirstChild("PlayerData")
+	if playerData then
+		playerData.PickaxeTier.Value = tier
+	end
+end
+
+function DataService.SetUnlockedZones(player, zones)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	profile.UnlockedZones = zones
+	local playerData = player:FindFirstChild("PlayerData")
+	if playerData then
+		playerData.UnlockedZones.Value = table.concat(zones, ",")
+	end
 end
 
 function DataService.Save(player)
@@ -96,6 +140,7 @@ local function loadProfile(player)
 
 	profiles[player] = profile
 	setupLeaderstats(player, profile)
+	setupPlayerData(player, profile)
 end
 
 function DataService.Init()

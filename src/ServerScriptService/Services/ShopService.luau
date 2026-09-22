@@ -31,7 +31,7 @@ local function purchasePickaxe(player, tierIndex)
 	end
 
 	DataService.SetCash(player, profile.Cash - tier.Cost)
-	profile.PickaxeTier = tierIndex
+	DataService.SetPickaxeTier(player, tierIndex)
 end
 
 local function purchaseZone(player, zoneName)
@@ -62,7 +62,9 @@ local function purchaseZone(player, zoneName)
 	end
 
 	DataService.SetCash(player, profile.Cash - zoneConfig.UnlockCost)
-	table.insert(profile.UnlockedZones, zoneName)
+	local zones = profile.UnlockedZones
+	table.insert(zones, zoneName)
+	DataService.SetUnlockedZones(player, zones)
 end
 
 function ShopService.Init()

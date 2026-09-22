@@ -20,8 +20,8 @@ local function tryRebirth(player)
 
 	profile.Rebirths += 1
 	profile.RebirthMultiplier = 1 + (profile.Rebirths * Config.Rebirth.MultiplierPerRebirth)
-	profile.PickaxeTier = 1
-	profile.UnlockedZones = { "Zone1" }
+	DataService.SetPickaxeTier(player, 1)
+	DataService.SetUnlockedZones(player, { "Zone1" })
 	DataService.SetCash(player, 0)
 
 	local leaderstats = player:FindFirstChild("leaderstats")
