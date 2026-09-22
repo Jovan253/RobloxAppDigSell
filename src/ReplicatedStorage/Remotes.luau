@@ -1,10 +1,11 @@
 -- Creates (server) or looks up (client) the shared RemoteEvents used by the
--- shop/rebirth flows. Cash itself is not pushed over a remote: clients read
--- it from the player's leaderstats.Cash value, which is simpler and avoids
--- keeping two sources of truth in sync.
+-- shop/rebirth flows, plus a couple of server->client-only ones (Dark Mines
+-- lava/jumpscare feedback). Cash itself is not pushed over a remote: clients
+-- read it from the player's leaderstats.Cash value, which is simpler and
+-- avoids keeping two sources of truth in sync.
 local RunService = game:GetService("RunService")
 
-local REMOTE_NAMES = { "PurchaseUpgrade", "PurchaseZone", "Rebirth" }
+local REMOTE_NAMES = { "PurchaseUpgrade", "PurchaseZone", "Rebirth", "ZoneNotice", "JumpscareEffect" }
 
 local remotesFolder
 

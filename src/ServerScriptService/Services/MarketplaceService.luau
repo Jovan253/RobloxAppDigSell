@@ -9,6 +9,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 local DataService = require(script.Parent.DataService)
 
 local CASH_BY_PRODUCT_ID = {}
@@ -56,12 +57,38 @@ local function onGamePassPurchaseFinished(player, gamePassId, wasPurchased)
 	end
 end
 
+-- Jumpscares every other player within Config.JumpscarePrankRadius of the
+-- buyer's character (the buyer has to actually be in Dark Mines near people
+-- for this to do anything -- it doesn't look them up by zone).
+local function triggerJumpscarePrank(buyer)
+	local buyerCharacter = buyer.Character
+	local buyerRoot = buyerCharacter and buyerCharacter:FindFirstChild("HumanoidRootPart")
+	if not buyerRoot then
+		return
+	end
+
+	for _, target in Players:GetPlayers() do
+		if target ~= buyer then
+			local character = target.Character
+			local root = character and character:FindFirstChild("HumanoidRootPart")
+			if root and (root.Position - buyerRoot.Position).Magnitude <= Config.JumpscarePrankRadius then
+				Remotes.JumpscareEffect:FireClient(target)
+			end
+		end
+	end
+end
+
 local function onProcessReceipt(receiptInfo)
 	local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
 	if not player then
 		-- Player isn't in this server (e.g. bought while offline, or left
 		-- mid-purchase). Ask Roblox to retry later rather than losing it.
 		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+
+	if Config.JumpscareProductId and receiptInfo.ProductId == Config.JumpscareProductId then
+		triggerJumpscarePrank(player)
+		return Enum.ProductPurchaseDecision.PurchaseGranted
 	end
 
 	local cashAmount = CASH_BY_PRODUCT_ID[receiptInfo.ProductId]

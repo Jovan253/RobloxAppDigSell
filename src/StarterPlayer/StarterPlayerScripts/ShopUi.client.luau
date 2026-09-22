@@ -257,6 +257,18 @@ for i, product in Config.CashProducts do
 	cashProductRows[i] = { label = label, button = button }
 end
 
+-- Only shown once Config.JumpscareProductId is filled in (after the
+-- developer product is created in the Creator Dashboard).
+if Config.JumpscareProductId then
+	local label, button = addRow(301 + #Config.CashProducts + 1)
+	label.Text = "Jumpscare Prank -- scare nearby players in Dark Mines"
+	button.Text = "Buy"
+	button.BackgroundColor3 = AFFORDABLE_COLOR
+	button.MouseButton1Click:Connect(function()
+		MarketplaceAPI:PromptProductPurchase(player, Config.JumpscareProductId)
+	end)
+end
+
 local function updateStoreSection()
 	if ownsDoubleCashValue.Value then
 		doubleCashLabel.Text = "2x Cash (owned)"
