@@ -49,4 +49,8 @@ Config.Rebirth = {
 Config.DataStoreName = "DigAndSellPlayerData_v1"
 Config.AutosaveInterval = 120 -- seconds
 
+Config.LeaderboardStoreName = "DigAndSellLeaderboard_v1"
+Config.LeaderboardUpdateInterval = 30 -- seconds
+Config.LeaderboardDisplayCount = 10
+
 return Config
