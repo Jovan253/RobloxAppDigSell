@@ -153,6 +153,14 @@ local function loadProfile(player)
 		profile = defaultProfile()
 	end
 
+	if Config.IsAdmin(player.UserId) then
+		profile.PickaxeTier = #Config.PickaxeTiers
+		profile.UnlockedZones = {}
+		for _, zoneConfig in Config.Zones do
+			table.insert(profile.UnlockedZones, zoneConfig.Name)
+		end
+	end
+
 	profiles[player] = profile
 	setupLeaderstats(player, profile)
 	setupPlayerData(player, profile)

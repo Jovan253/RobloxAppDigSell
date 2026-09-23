@@ -26,6 +26,13 @@ local function checkGamePasses(player)
 	ownedGamePasses[player] = owned
 
 	local gamePassId = Config.GamePasses.DoubleCash
+
+	if Config.IsAdmin(player.UserId) then
+		owned[gamePassId] = true
+		DataService.SetOwnsDoubleCash(player, true)
+		return
+	end
+
 	local ok, result = pcall(function()
 		return MarketplaceAPI:UserOwnsGamePassAsync(player.UserId, gamePassId)
 	end)

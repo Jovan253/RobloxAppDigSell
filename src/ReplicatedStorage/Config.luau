@@ -149,4 +149,22 @@ Config.CashProducts = {
 Config.JumpscareProductId = 3714340075
 Config.JumpscarePrankRadius = 60 -- studs; players within this range of the buyer get jumpscared
 
+-- Roblox UserIds that get everything unlocked/maxed for free: all zones,
+-- max pickaxe tier, and the 2x Cash multiplier -- applied on join by
+-- DataService/MarketplaceService (see Config.IsAdmin). Doesn't cover
+-- Robux-based purchases (Cash Packs, Jumpscare Prank) -- those are real
+-- transactions Roblox itself gates, not something to fake server-side.
+Config.AdminUserIds = {
+	-- TODO: add your Roblox numeric UserId here, e.g. 123456789
+}
+
+function Config.IsAdmin(userId)
+	for _, id in Config.AdminUserIds do
+		if id == userId then
+			return true
+		end
+	end
+	return false
+end
+
 return Config

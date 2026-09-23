@@ -14,15 +14,28 @@ local function tryRebirth(player)
 		return
 	end
 
-	if profile.Cash < Config.Rebirth.CashRequired then
+	local isAdmin = Config.IsAdmin(player.UserId)
+	if not isAdmin and profile.Cash < Config.Rebirth.CashRequired then
 		return
 	end
 
 	profile.Rebirths += 1
 	profile.RebirthMultiplier = 1 + (profile.Rebirths * Config.Rebirth.MultiplierPerRebirth)
-	DataService.SetPickaxeTier(player, 1)
-	DataService.SetUnlockedZones(player, { "Zone1" })
 	DataService.SetCash(player, 0)
+
+	if isAdmin then
+		-- Admins keep everything unlocked/maxed even through rebirth,
+		-- rather than actually resetting like a normal player would.
+		local allZoneNames = {}
+		for _, zoneConfig in Config.Zones do
+			table.insert(allZoneNames, zoneConfig.Name)
+		end
+		DataService.SetPickaxeTier(player, #Config.PickaxeTiers)
+		DataService.SetUnlockedZones(player, allZoneNames)
+	else
+		DataService.SetPickaxeTier(player, 1)
+		DataService.SetUnlockedZones(player, { "Zone1" })
+	end
 
 	local leaderstats = player:FindFirstChild("leaderstats")
 	if leaderstats then
