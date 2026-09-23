@@ -99,6 +99,7 @@ User feedback after playing the live version: multiplayer server sizing, wanting
 - [x] Mining particles invisible — `ParticleEmitter` needs a `Texture` to render anything; left unset betting on an engine default that didn't work. Replaced with plain Neon Parts flying outward + fading (no texture dependency). (commit `6673720`)
 - [x] Swapped to a free Toolbox pickaxe asset (`ServerStorage.PickaxeAsset`) instead of the procedural shape — user inserted it, `PickaxeToolService` now clones and strips it (removes any bundled scripts, disables `CanQuery`) rather than building geometry from scratch. One color for all tiers for now. (commit `6673720`)
 - [x] Confirmed Diamond Pickaxe one-shots every ore — correct by design (`Config.OreMaxHealth` is uniform at 3, Diamond's `Damage` is 3)
+- [x] Pickaxe crashed on equip — `PickaxeAsset` turned out to be a `Model`, not a `Tool` (`CanBeDropped` doesn't exist on a Model). Now builds a real Tool around the Model's contents, picking a Handle part and welding the rest to it (commit `f3f3f99`)
 - [ ] Playtest the free-asset pickaxe + fixed particles live — not tested yet
 
 ## Future ideas (not in MVP scope)
