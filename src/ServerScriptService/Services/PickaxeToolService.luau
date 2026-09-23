@@ -1,75 +1,47 @@
 -- Gives each player an equippable Tool matching their current pickaxe
--- tier -- built procedurally (handle + head, no mesh assets needed),
--- colored per tier so upgrading is visually obvious. Reacts to
--- PlayerData.PickaxeTier's replicated value directly, so it stays correct
--- through shop purchases, rebirth resets, and the admin override alike
--- without needing to be called from each of those sites individually.
--- The swing itself is cosmetic (see PickaxeSwing.client.luau, no hit
--- detection tied to it -- mining stays click-based via ClickDetector), but
--- MiningService now requires this Tool to actually be equipped (in
--- Character, not just Backpack) before a click counts as a hit.
+-- tier, cloned from a free Toolbox asset (ServerStorage.PickaxeAsset)
+-- rather than built procedurally -- one color for every tier for now, see
+-- Config.PickaxeTiers for where a per-tier look could be added later.
+-- Reacts to PlayerData.PickaxeTier's replicated value directly, so it
+-- stays correct through shop purchases, rebirth resets, and the admin
+-- override alike without needing to be called from each of those sites
+-- individually. The swing itself is cosmetic (see PickaxeSwing.client.luau)
+-- -- mining is proximity-based via Remotes.MineHit (see MiningService), not
+-- tied to the tool's geometry at all -- but MiningService requires this
+-- Tool to actually be equipped (in Character, not just Backpack) before a
+-- swing counts as a hit.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local DataService = require(script.Parent.DataService)
 
 local PickaxeToolService = {}
 
-local TIER_LOOKS = {
-	[1] = { Material = Enum.Material.Wood, Color = Color3.fromRGB(120, 85, 55) },
-	[2] = { Material = Enum.Material.Slate, Color = Color3.fromRGB(140, 140, 140) },
-	[3] = { Material = Enum.Material.Metal, Color = Color3.fromRGB(150, 150, 155) },
-	[4] = { Material = Enum.Material.Metal, Color = Color3.fromRGB(230, 190, 60) },
-	[5] = { Material = Enum.Material.Glass, Color = Color3.fromRGB(180, 230, 240) },
-}
+local sourceAsset = ServerStorage:WaitForChild("PickaxeAsset")
 
 local toolTemplates = {}
 
 local function buildToolTemplate(tierIndex)
 	local tier = Config.PickaxeTiers[tierIndex]
-	local look = TIER_LOOKS[tierIndex] or TIER_LOOKS[1]
 
-	local tool = Instance.new("Tool")
+	local tool = sourceAsset:Clone()
 	tool.Name = tier and tier.Name or "Pickaxe"
-	tool.RequiresHandle = true
 	tool.CanBeDropped = false
 	tool:SetAttribute("IsPickaxe", true)
 
-	local handle = Instance.new("Part")
-	handle.Name = "Handle"
-	handle.Size = Vector3.new(0.4, 2.4, 0.4)
-	handle.Material = Enum.Material.Wood
-	handle.Color = Color3.fromRGB(92, 64, 40)
-	handle.CanCollide = false
-	-- CanQuery defaults to true even with CanCollide false -- without this,
-	-- the equipped tool sits between the camera and whatever you're
-	-- clicking on, and your click raycast hits the pickaxe itself instead
-	-- of passing through to the ore's ClickDetector behind it.
-	handle.CanQuery = false
-	handle.Parent = tool
-
-	-- Head's long axis (1.6 studs) is X by default, same as an unrotated
-	-- Part -- it's already perpendicular to the vertical handle with no
-	-- rotation needed. The previous version rotated it 90 degrees around Z,
-	-- which swung its long axis to align WITH the handle instead of across
-	-- it -- a straight vertical stick (a "torch"), not a T/pickaxe shape.
-	local head = Instance.new("Part")
-	head.Name = "Head"
-	head.Size = Vector3.new(1.6, 0.4, 0.4)
-	head.Material = look.Material
-	head.Color = look.Color
-	head.CanCollide = false
-	head.CanQuery = false
-	head.CFrame = handle.CFrame * CFrame.new(0, 1, 0) -- flush with the handle's top, no overlap
-	head.Parent = tool
-
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = handle
-	weld.Part1 = head
-	weld.Parent = handle
-
-	tool.Grip = CFrame.new(0, -0.9, 0) * CFrame.Angles(math.rad(-90), 0, 0)
+	-- Strip any scripts the asset came with -- a Toolbox "pickaxe" could be
+	-- a full scripted kit assuming its own hit-detection, which we don't
+	-- want fighting with MiningService. CanQuery off so the held tool can't
+	-- block the player's own click-targeting for anything else either.
+	for _, descendant in tool:GetDescendants() do
+		if descendant:IsA("Script") or descendant:IsA("LocalScript") then
+			descendant:Destroy()
+		elseif descendant:IsA("BasePart") then
+			descendant.CanQuery = false
+		end
+	end
 
 	return tool
 end

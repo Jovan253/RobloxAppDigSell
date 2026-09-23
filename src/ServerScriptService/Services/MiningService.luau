@@ -10,7 +10,9 @@
 -- accent) and attributes (CashValue/RespawnTime/ZoneName/Health) so this
 -- service still recognizes it.
 local CollectionService = game:GetService("CollectionService")
+local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -84,19 +86,6 @@ local function createOreNode(oreType, cashValue, zoneName, respawnTime, position
 	rock.Color = oreType.Color
 	rock.CFrame = CFrame.new(position) * CFrame.Angles(0, math.rad(math.random(0, 359)), 0)
 	rock.Parent = model
-
-	-- Idle (Rate 0) -- fired on demand via :Emit() on each landed hit, see
-	-- playHitSparks. Leaving Texture unset uses the engine's default
-	-- particle look rather than guessing at a built-in asset path.
-	local sparks = Instance.new("ParticleEmitter")
-	sparks.Name = "MiningSparks"
-	sparks.Rate = 0
-	sparks.Lifetime = NumberRange.new(0.15, 0.35)
-	sparks.Speed = NumberRange.new(6, 12)
-	sparks.SpreadAngle = Vector2.new(45, 45)
-	sparks.Color = ColorSequence.new(oreType.Color)
-	sparks.Size = NumberSequence.new(0.35, 0)
-	sparks.Parent = rock
 
 	if oreType.Glow then
 		local vein = Instance.new("Part")
@@ -575,11 +564,31 @@ local function hasPickaxeEquipped(player)
 	return false
 end
 
-local function playHitSparks(node, amount)
-	local rock = node:FindFirstChild("Rock")
-	local sparks = rock and rock:FindFirstChild("MiningSparks")
-	if sparks then
-		sparks:Emit(amount)
+-- Small chips flying outward, in the ore's own color. Plain Parts rather
+-- than a ParticleEmitter -- a ParticleEmitter needs a Texture to render
+-- anything, and the previous version (left unset, betting on an engine
+-- default) turned out invisible. Parts render fine with no texture at all.
+local function playHitEffect(rockPosition, color, count)
+	for _ = 1, count do
+		local chip = Instance.new("Part")
+		chip.Name = "MiningDebris"
+		chip.Shape = Enum.PartType.Block
+		chip.Size = Vector3.new(0.15, 0.15, 0.15)
+		chip.Material = Enum.Material.Neon
+		chip.Color = color
+		chip.Anchored = true
+		chip.CanCollide = false
+		chip.CanQuery = false
+		chip.Position = rockPosition + Vector3.new((math.random() - 0.5) * 1.5, math.random() * 1, (math.random() - 0.5) * 1.5)
+		chip.Parent = Workspace
+
+		local target = chip.Position + Vector3.new((math.random() - 0.5) * 3, math.random() * 2 + 1, (math.random() - 0.5) * 3)
+		local tween = TweenService:Create(chip, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Position = target,
+			Transparency = 1,
+		})
+		tween:Play()
+		Debris:AddItem(chip, 0.35)
 	end
 end
 
@@ -618,14 +627,18 @@ end
 -- players are hitting the same ore, since damage just adds up toward the
 -- same pool regardless of who's dealing it.
 local function applyHit(node, player)
+	local rock = node:FindFirstChild("Rock")
+	local rockColor = rock and rock.Color or Color3.new(1, 1, 1)
+	local rockPosition = rock and rock.Position or node:GetPivot().Position
+
 	local health = (node:GetAttribute("Health") or Config.OreMaxHealth) - pickaxeDamage(player)
 	if health > 0 then
 		node:SetAttribute("Health", health)
-		playHitSparks(node, 8)
+		playHitEffect(rockPosition, rockColor, 5)
 		return
 	end
 
-	playHitSparks(node, 20)
+	playHitEffect(rockPosition, rockColor, 12)
 
 	local baseValue = node:GetAttribute("CashValue") or 1
 	local reward = baseValue
