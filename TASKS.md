@@ -151,6 +151,17 @@ Full design history in conversation; final decisions below. Staged like Dark Min
 - [x] `MiningService`: grants Gems + checks collection bonus on ore break, `ZoneNotice` toast on first-time discovery
 - [x] Gems readout added to the HUD (`MainHud.client.luau`)
 - [x] Collection Journal UI panel (`JournalUi.client.luau`, "Journal" button / "J" key) — all 15 types grouped by zone, undiscovered ones show "???" instead of name/value
+- [x] Playtest live — got feedback before testing: user wants discovery separated from reward (see below), holding off full playtest until that's in
+
+### Stage 1 refinement (2026-09-24): claim-based rewards, not auto-granted
+
+User feedback: discovering an ore type should stay automatic (mining marks it found), but the Gem reward for it should require opening the Journal and clicking Claim. Also: rarer ore should give more, but zone should matter more than rarity -- hub ores are barely "rare" in the big picture (Quartz should only give 1 claim Gem), while Sky Ruins' Sky Shard should be worth much more (15).
+
+- [x] Replaced flat `Config.CollectionBonusGems` with explicit per-ore-type `ClaimGems` values (hand-set, not formula-derived, so exact numbers like Quartz=1 are easy to hit) -- scales by both rarity and zone: Zone1 tops out at 1, Zone5 at 15
+- [x] `DataService`: split into `CollectedOreTypes` (discovered) and `ClaimedOreTypes` (reward taken) as separate sets
+- [x] New `CollectionService` (server) owns the claim RemoteEvent + reward lookup, kept separate from `MiningService`
+- [x] `MiningService` no longer auto-grants the discovery bonus, just marks discovery + toasts pointing at the Journal
+- [x] `JournalUi` rows get a Claim button (???/Claim +N/Claimed/-- states)
 - [ ] Playtest live — not tested yet
 
 ### Stage 2 (next round): Speed Boost + case-opening skins
