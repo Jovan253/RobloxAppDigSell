@@ -17,6 +17,11 @@ for _, product in Config.CashProducts do
 	CASH_BY_PRODUCT_ID[product.ProductId] = product.Cash
 end
 
+local GEMS_BY_PRODUCT_ID = {}
+for _, product in Config.GemProducts do
+	GEMS_BY_PRODUCT_ID[product.ProductId] = product.Gems
+end
+
 local MarketplaceService = {}
 
 local ownedGamePasses = {} -- [player] = { [gamePassId] = true }
@@ -99,7 +104,8 @@ local function onProcessReceipt(receiptInfo)
 	end
 
 	local cashAmount = CASH_BY_PRODUCT_ID[receiptInfo.ProductId]
-	if not cashAmount then
+	local gemsAmount = GEMS_BY_PRODUCT_ID[receiptInfo.ProductId]
+	if not cashAmount and not gemsAmount then
 		-- Unrecognized product: nothing to grant, but acknowledge the
 		-- receipt so Roblox doesn't retry it forever.
 		return Enum.ProductPurchaseDecision.PurchaseGranted
@@ -110,7 +116,12 @@ local function onProcessReceipt(receiptInfo)
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 
-	DataService.AddCash(player, cashAmount)
+	if cashAmount then
+		DataService.AddCash(player, cashAmount)
+	end
+	if gemsAmount then
+		DataService.AddGems(player, gemsAmount)
+	end
 	return Enum.ProductPurchaseDecision.PurchaseGranted
 end
 

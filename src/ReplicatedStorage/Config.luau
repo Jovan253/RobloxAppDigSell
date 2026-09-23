@@ -216,6 +216,17 @@ Config.CashProducts = {
 	{ ProductId = 3714204408, Name = "Huge Pack", Cash = 50000 },
 }
 
+-- Gem Packs (direct Robux purchase of Gems, the Speed Boost/skin-case
+-- currency). Not created in the Creator Dashboard yet -- fill in ProductId
+-- once created. Recommended prices: 100 Gems/79 Robux ("Gem Pouch"), 500
+-- Gems/299 Robux ("Gem Hoard", ~25% better value/Gem, mirrors the Cash
+-- Pack bulk-discount shape). GemShopUi only renders entries that have a
+-- ProductId set, same pattern as Config.JumpscareProductId below.
+Config.GemProducts = {
+	-- { ProductId = 0, Name = "Gem Pouch", Gems = 100 },
+	-- { ProductId = 0, Name = "Gem Hoard", Gems = 500 },
+}
+
 -- Dark Mines "Jumpscare Prank" developer product.
 Config.JumpscareProductId = 3714340075
 Config.JumpscarePrankRadius = 60 -- studs; players within this range of the buyer get jumpscared

@@ -172,6 +172,7 @@ User feedback: discovering an ore type should stay automatic (mining marks it fo
 - [x] `ShopService`/`Remotes`: new `PurchaseSpeedTier` remote, validated in-order + against Gems balance (not Cash)
 - [x] Playtest live — confirmed working
 - [x] User feedback: wanted Gems purchases in a separate shop from Cash purchases, not mixed into one panel — moved Speed Boost out of `ShopUi.client.luau` into a new `GemShopUi.client.luau` ("Gem Shop" button / "G" key, cyan-themed to match the Gems HUD readout), stacked below the Journal button
+- [x] Gem Packs (Robux → Gems) scaffolded: `Config.GemProducts`, `MarketplaceService` grants Gems via the same `ProcessReceipt` path as Cash Packs, `GemShopUi` "Buy Gems (Robux)" section (renders nothing until a ProductId is filled in). Recommended prices: 100 Gems/79 Robux ("Gem Pouch"), 500 Gems/299 Robux ("Gem Hoard") — **blocked on user creating these developer products in the Creator Dashboard and sending the IDs**
 
 ### Stage 2b (next round): case-opening cosmetic skin system
 - [ ] Not started — cases cost Gems, horizontal-spin reveal animation, weighted-rarity pickaxe skins, rarer skins get a particle effect attached (not just a recolor). Explicit gacha/case mechanic, not a direct-purchase shop, per user's correction.

@@ -6,6 +6,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
+local MarketplaceAPI = game:GetService("MarketplaceService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
@@ -167,6 +168,20 @@ for index, tier in Config.SpeedTiers do
 		Remotes.PurchaseSpeedTier:FireServer(index)
 	end)
 	speedRows[index] = { label = label, button = button, tier = tier }
+end
+
+-- Only products the Creator Dashboard actually has an ID for -- see
+-- Config.GemProducts. Nothing renders here until at least one is filled in.
+addSectionHeader("Buy Gems (Robux)", 100)
+
+for i, product in Config.GemProducts do
+	local label, button = addRow(100 + i)
+	label.Text = ("%s -- %d Gems"):format(product.Name, product.Gems)
+	button.Text = "Buy"
+	button.BackgroundColor3 = AFFORDABLE_COLOR
+	button.MouseButton1Click:Connect(function()
+		MarketplaceAPI:PromptProductPurchase(player, product.ProductId)
+	end)
 end
 
 local function refresh()
