@@ -68,7 +68,7 @@ User feedback: barrier text confirmed working (asked for it in round 3), grey vo
 ## Follow-up round 6 (2026-09-23) — dev tooling
 
 - [x] Admin account system — `Config.AdminUserIds`/`Config.IsAdmin`; on join, admins get all zones unlocked, max pickaxe tier, and the 2x Cash multiplier applied for free (doesn't cover Robux purchases — those still need real payment). Activated for UserId 2323949512.
-- [ ] Playtest live in Studio — not tested yet (rejoin needed to see it take effect, since it's applied on `PlayerAdded`)
+- [x] Playtest live in Studio — confirmed working (2026-09-23). To test as a normal player, just ask to temporarily comment out the UserId in `Config.AdminUserIds` (one-line toggle, no in-game UI needed for this)
 
 ## Future ideas (not in MVP scope)
 
