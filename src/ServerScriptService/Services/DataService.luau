@@ -14,20 +14,30 @@ local playerStore = DataStoreService:GetDataStore(Config.DataStoreName)
 
 local DataService = {}
 
-local profiles = {} -- [player] = { Cash, PickaxeTier, UnlockedZones, Rebirths, RebirthMultiplier }
+local profiles = {} -- [player] = { Cash, Gems, PickaxeTier, UnlockedZones, Rebirths, RebirthMultiplier, CollectedOreTypes }
 
 local function defaultProfile()
 	return {
 		Cash = 0,
+		Gems = 0,
 		PickaxeTier = 1,
 		UnlockedZones = { "Zone1" },
 		Rebirths = 0,
 		RebirthMultiplier = 1,
+		CollectedOreTypes = {}, -- set: [oreTypeName] = true
 	}
 end
 
 local function storeKey(player)
 	return "Player_" .. player.UserId
+end
+
+local function setToCommaString(set)
+	local names = {}
+	for name in set do
+		table.insert(names, name)
+	end
+	return table.concat(names, ",")
 end
 
 -- Retries a DataStore call a few times with backoff before giving up.
@@ -80,6 +90,16 @@ local function setupPlayerData(player, profile)
 	unlockedZones.Name = "UnlockedZones"
 	unlockedZones.Value = table.concat(profile.UnlockedZones, ",")
 	unlockedZones.Parent = playerData
+
+	local gems = Instance.new("IntValue")
+	gems.Name = "Gems"
+	gems.Value = profile.Gems
+	gems.Parent = playerData
+
+	local collectedOreTypes = Instance.new("StringValue")
+	collectedOreTypes.Name = "CollectedOreTypes"
+	collectedOreTypes.Value = setToCommaString(profile.CollectedOreTypes)
+	collectedOreTypes.Parent = playerData
 
 	-- Not part of `profile`/DataStore -- gamepass ownership is authoritative
 	-- on Roblox's side and re-checked by MarketplaceService each session.
@@ -138,6 +158,42 @@ function DataService.SetUnlockedZones(player, zones)
 	end
 end
 
+function DataService.SetGems(player, amount)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	profile.Gems = amount
+	local playerData = player:FindFirstChild("PlayerData")
+	if playerData then
+		playerData.Gems.Value = profile.Gems
+	end
+end
+
+function DataService.AddGems(player, amount)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	DataService.SetGems(player, profile.Gems + amount)
+end
+
+-- Returns true only the first time this ore type is ever recorded for this
+-- player (see Config.CollectionBonusGems) -- false if already collected.
+function DataService.MarkOreTypeCollected(player, oreTypeName)
+	local profile = profiles[player]
+	if not profile or profile.CollectedOreTypes[oreTypeName] then
+		return false
+	end
+
+	profile.CollectedOreTypes[oreTypeName] = true
+	local playerData = player:FindFirstChild("PlayerData")
+	if playerData then
+		playerData.CollectedOreTypes.Value = setToCommaString(profile.CollectedOreTypes)
+	end
+	return true
+end
+
 function DataService.SetOwnsDoubleCash(player, owns)
 	local playerData = player:FindFirstChild("PlayerData")
 	if playerData then
@@ -173,6 +229,11 @@ local function loadProfile(player)
 	end
 
 	local profile = result or defaultProfile()
+
+	-- Migration: profiles saved before Gems/CollectedOreTypes existed won't
+	-- have these fields at all.
+	profile.Gems = profile.Gems or 0
+	profile.CollectedOreTypes = profile.CollectedOreTypes or {}
 
 	if Config.IsAdmin(player.UserId) then
 		profile.PickaxeTier = #Config.PickaxeTiers

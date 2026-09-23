@@ -54,6 +54,18 @@ local WALL_DEPTH_BELOW_FLOOR = 20
 
 local MiningService = {}
 
+-- Built once from Config.Zones so ore-break rewards can look up a type's
+-- Gems value by name without re-scanning every zone per hit.
+local GEMS_BY_ORE_TYPE_NAME = {}
+for _, zoneConfig in Config.Zones do
+	for _, oreType in zoneConfig.OreTypes do
+		GEMS_BY_ORE_TYPE_NAME[oreType.Name] = oreType.Gems or 0
+	end
+	if zoneConfig.RareOreType then
+		GEMS_BY_ORE_TYPE_NAME[zoneConfig.RareOreType.Name] = zoneConfig.RareOreType.Gems or 0
+	end
+end
+
 local lastCheckpoint = {} -- [player] = { [zoneName] = { CFrame, Order } }
 local teleportCooldown = {} -- [player] = true while cooling down after a fall
 
@@ -814,6 +826,17 @@ local function applyHit(node, player)
 		* rebirthMultiplier(player)
 		* MarketplaceService.GetCashMultiplier(player)
 	DataService.AddCash(player, reward)
+
+	local oreTypeName = node:GetAttribute("OreTypeName")
+	local gems = GEMS_BY_ORE_TYPE_NAME[oreTypeName] or 0
+	if gems > 0 then
+		DataService.AddGems(player, gems)
+	end
+
+	if oreTypeName and DataService.MarkOreTypeCollected(player, oreTypeName) then
+		DataService.AddGems(player, Config.CollectionBonusGems)
+		Remotes.ZoneNotice:FireClient(player, ("New ore discovered: %s! +%d Gems"):format(oreTypeName, Config.CollectionBonusGems))
+	end
 
 	local poolId = node:GetAttribute("PoolId")
 	local respawnTime = node:GetAttribute("RespawnTime") or 3

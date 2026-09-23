@@ -31,14 +31,41 @@ local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 8)
 corner.Parent = cashLabel
 
+local gemsLabel = Instance.new("TextLabel")
+gemsLabel.Name = "GemsLabel"
+gemsLabel.Position = UDim2.new(0, 16, 0, 64)
+gemsLabel.Size = UDim2.new(0, 220, 0, 36)
+gemsLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+gemsLabel.BackgroundTransparency = 0.25
+gemsLabel.TextColor3 = Color3.fromRGB(140, 220, 255)
+gemsLabel.Font = Enum.Font.GothamBold
+gemsLabel.TextSize = 18
+gemsLabel.Text = "Gems: 0"
+gemsLabel.Parent = screenGui
+
+local gemsCorner = Instance.new("UICorner")
+gemsCorner.CornerRadius = UDim.new(0, 8)
+gemsCorner.Parent = gemsLabel
+
 local function formatCash(amount)
 	return ("Cash: %d"):format(amount)
 end
 
+local function formatGems(amount)
+	return ("Gems: %d"):format(amount)
+end
+
 local leaderstats = player:WaitForChild("leaderstats")
 local cashValue = leaderstats:WaitForChild("Cash")
+local playerData = player:WaitForChild("PlayerData")
+local gemsValue = playerData:WaitForChild("Gems")
 
 cashLabel.Text = formatCash(cashValue.Value)
 cashValue:GetPropertyChangedSignal("Value"):Connect(function()
 	cashLabel.Text = formatCash(cashValue.Value)
+end)
+
+gemsLabel.Text = formatGems(gemsValue.Value)
+gemsValue:GetPropertyChangedSignal("Value"):Connect(function()
+	gemsLabel.Text = formatGems(gemsValue.Value)
 end)
