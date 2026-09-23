@@ -30,8 +30,8 @@ local DARK_MINES_ENTRANCE_DEPTH = 40
 local DARK_MINES_LAVA_DEPTH = 70
 local DARK_MINES_TREASURE_DEPTH = 50
 local DARK_MINES_PLATFORM_COUNT = 7
-local DARK_MINES_PLATFORM_X_OFFSET = 8 -- studs, left/right zigzag (room is 150 wide now, not 90)
-local DARK_MINES_PLATFORM_SIZE = Vector3.new(6, 1, 5)
+local DARK_MINES_PLATFORM_X_OFFSET = 6 -- studs, left/right zigzag -- eased slightly, 8 was a bit too far a jump
+local DARK_MINES_PLATFORM_SIZE = Vector3.new(7, 1, 6) -- slightly bigger landing target, same reasoning
 
 -- Sky Ruins layout (same depth split as Dark Mines, see Zone5 in
 -- Config.luau). Unlike Dark Mines this one is orientation-aware (built via
@@ -40,8 +40,8 @@ local SKY_RUINS_ENTRANCE_DEPTH = 40
 local SKY_RUINS_GAP_DEPTH = 70
 local SKY_RUINS_TREASURE_DEPTH = 50
 local SKY_RUINS_PLATFORM_COUNT = 7
-local SKY_RUINS_PLATFORM_X_OFFSET = 8
-local SKY_RUINS_PLATFORM_SIZE = Vector3.new(6, 1, 5)
+local SKY_RUINS_PLATFORM_X_OFFSET = 6 -- eased slightly, 8 was a bit too far a jump
+local SKY_RUINS_PLATFORM_SIZE = Vector3.new(7, 1, 6)
 local SKY_RUINS_VOID_DEPTH_BELOW_FLOOR = 60 -- how far below floor level the kill-trigger sits
 
 -- How far below normal floor level side/back walls extend. Only matters for
@@ -554,9 +554,9 @@ local function buildSkyRuins(zoneConfig, zonesFolder)
 
 	setupFallKillZone(voidTrigger, zoneConfig.Name, entranceCheckpointCFrame, "You fell from the ruins! Back to your last checkpoint.")
 
-	-- Jump platforms across the gap, zigzagging left/right
+	-- Jump platforms across the gap, zigzagging left/right. No mid-gap
+	-- checkpoint here (unlike Dark Mines) -- just entrance and treasure.
 	local zStep = SKY_RUINS_GAP_DEPTH / (SKY_RUINS_PLATFORM_COUNT + 1)
-	local midIndex = math.floor(SKY_RUINS_PLATFORM_COUNT / 2) + 1
 
 	for i = 1, SKY_RUINS_PLATFORM_COUNT do
 		local widthOffset = (i % 2 == 0 and 1 or -1) * SKY_RUINS_PLATFORM_X_OFFSET
@@ -571,15 +571,6 @@ local function buildSkyRuins(zoneConfig, zonesFolder)
 		platform.Material = zoneConfig.WallMaterial
 		platform.Color = zoneConfig.WallColor
 		platform.Parent = zoneFolder
-
-		if i == midIndex then
-			addCheckpoint(
-				zoneFolder,
-				platformCFrame + Vector3.new(0, 2.5, 0),
-				ZoneGeometry.size(zoneConfig, SKY_RUINS_PLATFORM_SIZE.X, SKY_RUINS_PLATFORM_SIZE.Z, 3),
-				2
-			)
-		end
 	end
 
 	-- Treasure platform (rare ore), past the gap
