@@ -87,10 +87,19 @@ User feedback after playing the live version: multiplayer server sizing, wanting
 - [x] Server size recommendation — cap Max Player Count in Game Settings (Basic Info) to roughly 20-30; this is a solo-optimization simulator, not a game that benefits from huge crowded servers. **User action needed**: set this in the Dashboard/Studio, no code involved.
 - [x] Ore count increase — Zone1/3: 30→50, Zone2: 28→45, Dark Mines entrance: 10→16, Dark Mines treasure: 6→10 (commit `90d8a76`)
 - [x] Pickaxe tool + swing + multi-hit mining — see design decision below
-- [ ] Playtest the pickaxe tool/swing/multi-hit live — not tested yet, and tool proportions/grip offset/swing angles are a first pass that will likely need visual tuning
-- [ ] 4th zone ("Sky Ruins", South side, floating-platform parkour over a bottomless drop) — **not started**, queued as the next round so it doesn't get rushed bundled with the pickaxe rework. Needs spawn moved to hub center since South won't be open anymore.
+- [ ] 4th zone ("Sky Ruins", South side, floating-platform parkour over a bottomless drop) — **not started**, still queued as the next round
 
-**Design decision — multi-hit mining:** hits-required now scales with pickaxe tier (fewer hits = better pickaxe), not just cash-per-hit. Wooden/Stone = 3 hits, Iron/Gold = 2, Diamond = 1, uniform across all ore types/zones (`Config.OreMaxHealth` + each tier's `Damage`). Mining validation is unchanged (still server-side via ClickDetector) — this only adds a Health counter on top.
+**Design decision — multi-hit mining:** hits-required scales with pickaxe tier (fewer hits = better pickaxe), not just cash-per-hit. Wooden/Stone = 3 hits, Iron/Gold = 2, Diamond = 1 (instant), uniform across all ore types/zones (`Config.OreMaxHealth` + each tier's `Damage`).
+
+### Pickaxe troubleshooting (2026-09-23) — several real bugs found via playtesting
+
+- [x] Pickaxe shape looked like a "torch" — head part was rotated 90° around the wrong axis, aligning it with the handle instead of across it. Fixed (commit `9ae0a52`).
+- [x] Mining did nothing with pickaxe equipped, attempt 1 — `CanQuery` (defaults true independent of `CanCollide`) meant the held tool's own parts blocked the click raycast from ever reaching the ore behind it. Fixed (commit `0847478`), but this wasn't the whole story.
+- [x] Mining *still* did nothing with pickaxe equipped, attempt 2 — real root cause: Roblox's default controls stop evaluating `ClickDetector` hover/clicks entirely once **any** Tool is equipped (confirmed by the reported symptom: cursor stopped reacting to ore hover the moment a pickaxe was equipped). Requiring an equipped tool and triggering mining via ClickDetector could never have worked together. **Architecture change**: removed ClickDetector from ore nodes entirely; mining now fires on the pickaxe's `Tool.Activated` event → `Remotes.MineHit` → server picks the nearest ore within 10 studs of the player. Confirmed working (commit `25da3db`).
+- [x] Mining particles invisible — `ParticleEmitter` needs a `Texture` to render anything; left unset betting on an engine default that didn't work. Replaced with plain Neon Parts flying outward + fading (no texture dependency). (commit `6673720`)
+- [x] Swapped to a free Toolbox pickaxe asset (`ServerStorage.PickaxeAsset`) instead of the procedural shape — user inserted it, `PickaxeToolService` now clones and strips it (removes any bundled scripts, disables `CanQuery`) rather than building geometry from scratch. One color for all tiers for now. (commit `6673720`)
+- [x] Confirmed Diamond Pickaxe one-shots every ore — correct by design (`Config.OreMaxHealth` is uniform at 3, Diamond's `Damage` is 3)
+- [ ] Playtest the free-asset pickaxe + fixed particles live — not tested yet
 
 ## Future ideas (not in MVP scope)
 
