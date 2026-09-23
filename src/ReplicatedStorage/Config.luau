@@ -155,7 +155,7 @@ Config.JumpscarePrankRadius = 60 -- studs; players within this range of the buye
 -- Robux-based purchases (Cash Packs, Jumpscare Prank) -- those are real
 -- transactions Roblox itself gates, not something to fake server-side.
 Config.AdminUserIds = {
-	-- TODO: add your Roblox numeric UserId here, e.g. 123456789
+	2323949512,
 }
 
 function Config.IsAdmin(userId)
