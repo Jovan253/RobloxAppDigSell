@@ -55,15 +55,16 @@ User feedback: barrier text confirmed working (asked for it in round 3), grey vo
 
 - [x] Wooden zone-name signs — post + board at each zone's entrance (hub gets one at its center), labeled on both readable faces, visible regardless of lock state (unlike the barrier label, which disappears once unlocked)
 - [x] Radial hub layout — Zone2 (West), Zone3 (East), Zone4/Dark Mines (North), South left open for spawn. Added `ZoneGeometry` (shared orientation-aware local-to-world transform) so MiningService/ZoneBarriers/EnvironmentService all agree on where each zone's entrance and footprint actually are; Dark Mines' own lava/parkour geometry stays hardcoded North-only (documented in `Config.luau`)
-- [ ] Playtest both live in Studio — not tested yet, and this was a nontrivial geometry refactor (verified by hand-tracing the coordinate math, not in-engine)
-
-## Design questions raised, not yet built (2026-09-23)
-
-User asked for a recommendation on a Speed Boost (via monetization / gem system / wheel spin) and what a Gem system could look like (how earned, what it buys). Answered with a proposal in conversation — see chat history for the recommendation once we're ready to implement; nothing built yet pending user decision.
+- [x] Playtest both live in Studio — confirmed working; found one bug (sign post poking through the board), fixed same round (commit `4c82009`)
 
 ## Future ideas (not in MVP scope)
 
 - Auto-Mine gamepass — periodically auto-mines the nearest unlocked ore without clicking, for players who own it
+- Gem system (agreed 2026-09-23, not built) — secondary currency, deliberately kept separate from what Cash already buys:
+  - Earn: primarily from mining **rare** ore types (the glowing ones — Quartz/Emerald/Diamond/Cursed Ruby), plus a small passive playtime trickle, plus a Gem Pack developer product for direct purchase
+  - Spend: permanent Speed Boost tiers (WalkSpeed, like Pickaxe tiers but for movement); Pets (flagged as a bigger feature on its own — following AI, rarity table, equip/inventory UI — not a quick add)
+  - Explicitly NOT another way to buy Pickaxe tiers/zones — "Shovels" in earlier discussion turned out to just mean Pickaxes (existing Cash-based system), not a new tool track, so no separate mechanic needed there
+- Wheel Spin (agreed 2026-09-23, not built) — daily-login mechanic, spin once per day for a prize (Cash, Gems, or a short-lived temporary speed boost); a reward delivery mechanism, not a Gem-spending feature
 
 ## Immediate next steps
 
