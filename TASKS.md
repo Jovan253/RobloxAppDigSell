@@ -114,7 +114,9 @@ User request: add Sky Ruins so all 4 hub sides are used, move spawn to hub cente
 - [x] Playtest all of the above live in Studio — confirmed: "hub is good, spawn is good, no gaps"
 - [x] Sky Ruins jumps "slightly too hard" — eased zigzag offset (8→6 studs) and enlarged landing platforms (6x1x5→7x1x6) for both Dark Mines and Sky Ruins, since they share the same math
 - [x] Removed the Sky Ruins mid-gap checkpoint per feedback (entrance + treasure only now; Dark Mines keeps its mid-checkpoint, untouched)
-- [ ] Playtest the eased jump difficulty + checkpoint removal — not tested yet
+- [x] Playtest the eased jump difficulty + checkpoint removal — confirmed, but now "too easy"
+- [x] Platforms now drift side-to-side (oscillating tween, randomized period/phase per platform) instead of sitting still, adding a timing element on top of jump distance — shared `addOscillatingPlatform` helper for both zones; Dark Mines' mid-checkpoint widened to cover the swing range since it's tied to a now-moving platform
+- [ ] Playtest the moving platforms live — not tested yet
 
 ## Future ideas (not in MVP scope)
 
