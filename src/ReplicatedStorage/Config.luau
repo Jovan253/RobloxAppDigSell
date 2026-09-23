@@ -113,13 +113,23 @@ Config.Zones = {
 	},
 }
 
+-- Damage is per-hit health removed from an ore node (see Config.OreMaxHealth
+-- and MiningService's multi-hit logic) -- a separate, much gentler scale
+-- than Multiplier (which is the cash-per-hit scaler and deliberately spans
+-- a huge range for late-game payoff; using it directly for hit-count would
+-- mean the starting tier needs an absurd number of hits per rock).
 Config.PickaxeTiers = {
-	{ Name = "Wooden Pickaxe", Cost = 0, Multiplier = 1 },
-	{ Name = "Stone Pickaxe", Cost = 100, Multiplier = 2 },
-	{ Name = "Iron Pickaxe", Cost = 750, Multiplier = 4 },
-	{ Name = "Gold Pickaxe", Cost = 4000, Multiplier = 8 },
-	{ Name = "Diamond Pickaxe", Cost = 20000, Multiplier = 16 },
+	{ Name = "Wooden Pickaxe", Cost = 0, Multiplier = 1, Damage = 1 },
+	{ Name = "Stone Pickaxe", Cost = 100, Multiplier = 2, Damage = 1 },
+	{ Name = "Iron Pickaxe", Cost = 750, Multiplier = 4, Damage = 2 },
+	{ Name = "Gold Pickaxe", Cost = 4000, Multiplier = 8, Damage = 2 },
+	{ Name = "Diamond Pickaxe", Cost = 20000, Multiplier = 16, Damage = 3 },
 }
+
+-- Every ore node has this much health regardless of type/zone/rarity, so
+-- hits-required is purely a function of the mining player's pickaxe tier:
+-- Wooden/Stone = 3 hits, Iron/Gold = 2 hits, Diamond = 1 hit.
+Config.OreMaxHealth = 3
 
 Config.Rebirth = {
 	CashRequired = 50000,

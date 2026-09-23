@@ -111,6 +111,7 @@ local function createOreNode(oreType, cashValue, zoneName, respawnTime, position
 	model:SetAttribute("ZoneName", zoneName)
 	model:SetAttribute("OreTypeName", oreType.Name)
 	model:SetAttribute("PoolId", poolId)
+	model:SetAttribute("Health", Config.OreMaxHealth)
 
 	CollectionService:AddTag(model, ORE_TAG)
 
@@ -533,23 +534,36 @@ local function pickaxeMultiplier(player)
 	return tier and tier.Multiplier or 1
 end
 
+local function pickaxeDamage(player)
+	local profile = DataService.GetProfile(player)
+	if not profile then
+		return 1
+	end
+	local tier = Config.PickaxeTiers[profile.PickaxeTier]
+	return tier and tier.Damage or 1
+end
+
 local function rebirthMultiplier(player)
 	local profile = DataService.GetProfile(player)
 	return profile and profile.RebirthMultiplier or 1
 end
 
+-- Each hit removes the clicking player's pickaxe Damage from the node's
+-- shared Health -- this generalizes correctly even when different-tier
+-- players are hitting the same ore, since damage just adds up toward the
+-- same pool regardless of who's dealing it. No debounce needed: the
+-- handler never yields, so Luau can't interleave two firings of it (a
+-- rapid double-click legitimately registers as two hits, which is the
+-- desired multi-hit behavior, not a race to guard against).
 local function onNodeClicked(node, player)
-	if node:GetAttribute("Mining") then
-		-- Debounce: without this, two MouseClick firings that both start
-		-- before the first one's Destroy() below takes effect could grant
-		-- the reward twice.
-		return
-	end
-	node:SetAttribute("Mining", true)
-
 	local zoneName = node:GetAttribute("ZoneName")
 	if not isZoneUnlocked(player, zoneName) then
-		node:SetAttribute("Mining", false)
+		return
+	end
+
+	local health = (node:GetAttribute("Health") or Config.OreMaxHealth) - pickaxeDamage(player)
+	if health > 0 then
+		node:SetAttribute("Health", health)
 		return
 	end
 
