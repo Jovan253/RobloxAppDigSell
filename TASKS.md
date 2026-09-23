@@ -65,6 +65,11 @@ User feedback: barrier text confirmed working (asked for it in round 3), grey vo
 - [x] Pit was still open void at the front/back ends (entrance drop-off and treasure-platform edge) — added matching end walls there too (commit `b0331a9`)
 - [x] Playtest the pit end walls live in Studio — confirmed, "looks great" (2026-09-23)
 
+## Follow-up round 6 (2026-09-23) — dev tooling
+
+- [x] Admin account system — `Config.AdminUserIds`/`Config.IsAdmin`; on join, admins get all zones unlocked, max pickaxe tier, and the 2x Cash multiplier applied for free (doesn't cover Robux purchases — those still need real payment). Activated for UserId 2323949512.
+- [ ] Playtest live in Studio — not tested yet (rejoin needed to see it take effect, since it's applied on `PlayerAdded`)
+
 ## Future ideas (not in MVP scope)
 
 - Auto-Mine gamepass — periodically auto-mines the nearest unlocked ore without clicking, for players who own it
