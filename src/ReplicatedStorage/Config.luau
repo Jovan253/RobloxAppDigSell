@@ -11,9 +11,12 @@ local Config = {}
 -- (ZoneGeometry swaps X/Z rather than rotating anything).
 --
 -- Layout is hub-and-spoke: Zone1 is a wide-open square central hub (no
--- walls). Zone2/3/4 are one per side (West/East/North) so each is a
--- separate direction from the hub rather than lined up next to each other;
--- South is left open as the entrance/spawn side.
+-- walls), and one zone sits on each of its 4 sides (West/East/North/South)
+-- -- Zone2/3/4/5 below all set RoomSize.X to exactly match the hub's own
+-- side length (150), so every zone's entrance spans its whole hub edge with
+-- no gap on either side. Spawn is at the hub's center (see
+-- EnvironmentService), not reserved to any one side, now that all 4 are
+-- taken.
 --
 -- `OreTypes` entries are picked per ore node by weighted random (Weight is
 -- relative, doesn't need to sum to 100). `Multiplier` scales the zone's base
@@ -27,13 +30,13 @@ Config.Zones = {
 		OreValue = 1,
 		RespawnTime = 3,
 		Origin = Vector3.new(0, 1, 0),
-		RoomSize = Vector3.new(120, 1, 120),
+		RoomSize = Vector3.new(150, 1, 150),
 		Enclosed = false, -- open-air hub, no walls/ceiling
 		GroundMaterial = Enum.Material.Grass,
 		GroundColor = Color3.fromRGB(94, 155, 76),
 		WallMaterial = Enum.Material.Rock,
 		WallColor = Color3.fromRGB(150, 140, 120),
-		OreCount = 50,
+		OreCount = 75,
 		OreTypes = {
 			{ Name = "Sandstone", Material = Enum.Material.Sandstone, Color = Color3.fromRGB(214, 187, 129), Multiplier = 1, Weight = 85, Glow = false },
 			{ Name = "Quartz", Material = Enum.Material.Glass, Color = Color3.fromRGB(240, 240, 250), Multiplier = 5, Weight = 15, Glow = true },
@@ -45,15 +48,15 @@ Config.Zones = {
 		UnlockCost = 500,
 		OreValue = 5,
 		RespawnTime = 4,
-		Origin = Vector3.new(-60, 1, 60), -- hub's west edge, vertically centered
+		Origin = Vector3.new(-75, 1, 75), -- hub's west edge, vertically centered
 		Orientation = "West",
-		RoomSize = Vector3.new(100, 36, 100),
+		RoomSize = Vector3.new(150, 36, 100),
 		Enclosed = true,
 		GroundMaterial = Enum.Material.Slate,
 		GroundColor = Color3.fromRGB(70, 70, 78),
 		WallMaterial = Enum.Material.Basalt,
 		WallColor = Color3.fromRGB(45, 45, 52),
-		OreCount = 45,
+		OreCount = 65,
 		OreTypes = {
 			{ Name = "Iron Ore", Material = Enum.Material.Metal, Color = Color3.fromRGB(150, 150, 155), Multiplier = 1, Weight = 80, Glow = false },
 			{ Name = "Emerald", Material = Enum.Material.Glass, Color = Color3.fromRGB(60, 220, 120), Multiplier = 6, Weight = 20, Glow = true },
@@ -65,15 +68,15 @@ Config.Zones = {
 		UnlockCost = 5000,
 		OreValue = 25,
 		RespawnTime = 5,
-		Origin = Vector3.new(60, 1, 60), -- hub's east edge, vertically centered
+		Origin = Vector3.new(75, 1, 75), -- hub's east edge, vertically centered
 		Orientation = "East",
-		RoomSize = Vector3.new(110, 40, 110),
+		RoomSize = Vector3.new(150, 40, 110),
 		Enclosed = true,
 		GroundMaterial = Enum.Material.Basalt,
 		GroundColor = Color3.fromRGB(45, 35, 60),
 		WallMaterial = Enum.Material.Slate,
 		WallColor = Color3.fromRGB(60, 45, 80),
-		OreCount = 50,
+		OreCount = 65,
 		OreTypes = {
 			{ Name = "Amethyst", Material = Enum.Material.Glass, Color = Color3.fromRGB(150, 90, 220), Multiplier = 1, Weight = 80, Glow = true },
 			{ Name = "Diamond", Material = Enum.Material.Ice, Color = Color3.fromRGB(190, 240, 250), Multiplier = 6, Weight = 20, Glow = true },
@@ -85,7 +88,7 @@ Config.Zones = {
 		UnlockCost = 25000,
 		OreValue = 80,
 		RespawnTime = 6,
-		Origin = Vector3.new(0, 1, 120), -- hub's north edge
+		Origin = Vector3.new(0, 1, 150), -- hub's north edge
 		Orientation = "North",
 		-- Z = ENTRANCE_DEPTH + LAVA_DEPTH + TREASURE_DEPTH from
 		-- MiningService's Dark Mines layout constants (40 + 70 + 50 = 160).
@@ -94,14 +97,14 @@ Config.Zones = {
 		-- generic room shell/ore scatter, which is orientation-aware via
 		-- ZoneGeometry) -- don't change this zone's Orientation without
 		-- also reworking that geometry.
-		RoomSize = Vector3.new(90, 40, 160),
+		RoomSize = Vector3.new(150, 40, 160),
 		Enclosed = true,
 		IsDarkMines = true,
 		GroundMaterial = Enum.Material.Basalt,
 		GroundColor = Color3.fromRGB(20, 18, 20),
 		WallMaterial = Enum.Material.Basalt,
 		WallColor = Color3.fromRGB(15, 13, 15),
-		OreCount = 16, -- safe ore in the entrance area only
+		OreCount = 25, -- safe ore in the entrance area only
 		OreTypes = {
 			{ Name = "Obsidian Shard", Material = Enum.Material.Basalt, Color = Color3.fromRGB(40, 35, 45), Multiplier = 1, Weight = 100, Glow = false },
 		},
@@ -110,6 +113,35 @@ Config.Zones = {
 		RareOreType = { Name = "Cursed Ruby", Material = Enum.Material.Neon, Color = Color3.fromRGB(200, 20, 20), Multiplier = 8, Glow = true },
 		RareOreCount = 10,
 		LavaColor = Color3.fromRGB(230, 90, 20),
+	},
+	{
+		Name = "Zone5",
+		DisplayName = "Sky Ruins",
+		UnlockCost = 75000, -- new top tier, above Dark Mines
+		OreValue = 150,
+		RespawnTime = 6,
+		Origin = Vector3.new(0, 1, 0), -- hub's south edge (== hub's own Origin)
+		Orientation = "South",
+		-- Same ENTRANCE/GAP/TREASURE depth split as Dark Mines (40+70+50 =
+		-- 160), see MiningService's Sky Ruins layout constants. Internal
+		-- gap/platform/treasure geometry is orientation-aware (unlike Dark
+		-- Mines' hardcoded-North version), so this one CAN have its
+		-- Orientation changed later without reworking that geometry.
+		RoomSize = Vector3.new(150, 40, 160),
+		Enclosed = true,
+		IsSkyRuins = true,
+		GroundMaterial = Enum.Material.Sandstone,
+		GroundColor = Color3.fromRGB(196, 181, 150),
+		WallMaterial = Enum.Material.Concrete,
+		WallColor = Color3.fromRGB(170, 165, 150),
+		OreCount = 25, -- safe ore in the entrance area only
+		OreTypes = {
+			{ Name = "Weathered Stone", Material = Enum.Material.Concrete, Color = Color3.fromRGB(180, 175, 160), Multiplier = 1, Weight = 100, Glow = false },
+		},
+		-- Rare ore is hand-placed on the treasure platform past the gap,
+		-- not part of the weighted OreTypes scatter.
+		RareOreType = { Name = "Sky Shard", Material = Enum.Material.Neon, Color = Color3.fromRGB(120, 200, 255), Multiplier = 8, Glow = true },
+		RareOreCount = 10,
 	},
 }
 

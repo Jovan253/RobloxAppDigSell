@@ -109,10 +109,36 @@ local function setupAtmosphere()
 	Lighting.FogEnd = 500
 end
 
+-- Spawn moved to the hub's center now that all 4 sides have a zone (none
+-- left open as a natural "entrance" edge). Replaces any existing
+-- SpawnLocation(s) so there's exactly one, regardless of what was manually
+-- placed in Studio before this.
+local function setupSpawn()
+	local hubConfig = Config.Zones[1]
+	local bounds = ZoneGeometry.bounds(hubConfig)
+	local center = Vector3.new((bounds.minX + bounds.maxX) / 2, hubConfig.Origin.Y, (bounds.minZ + bounds.maxZ) / 2)
+
+	for _, descendant in Workspace:GetDescendants() do
+		if descendant:IsA("SpawnLocation") then
+			descendant:Destroy()
+		end
+	end
+
+	local spawn = Instance.new("SpawnLocation")
+	spawn.Name = "HubSpawn"
+	spawn.Anchored = true
+	spawn.CanCollide = false
+	spawn.Transparency = 1
+	spawn.Size = Vector3.new(8, 1, 8)
+	spawn.CFrame = CFrame.new(center + Vector3.new(0, 0.5, 0))
+	spawn.Parent = Workspace
+end
+
 function EnvironmentService.Init()
 	removeDefaultBaseplate()
 	buildGroundFill()
 	setupAtmosphere()
+	setupSpawn()
 end
 
 return EnvironmentService

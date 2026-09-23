@@ -30,8 +30,19 @@ local DARK_MINES_ENTRANCE_DEPTH = 40
 local DARK_MINES_LAVA_DEPTH = 70
 local DARK_MINES_TREASURE_DEPTH = 50
 local DARK_MINES_PLATFORM_COUNT = 7
-local DARK_MINES_PLATFORM_X_OFFSET = 4 -- studs, left/right zigzag
+local DARK_MINES_PLATFORM_X_OFFSET = 8 -- studs, left/right zigzag (room is 150 wide now, not 90)
 local DARK_MINES_PLATFORM_SIZE = Vector3.new(6, 1, 5)
+
+-- Sky Ruins layout (same depth split as Dark Mines, see Zone5 in
+-- Config.luau). Unlike Dark Mines this one is orientation-aware (built via
+-- ZoneGeometry throughout), since it's on the South side, not North.
+local SKY_RUINS_ENTRANCE_DEPTH = 40
+local SKY_RUINS_GAP_DEPTH = 70
+local SKY_RUINS_TREASURE_DEPTH = 50
+local SKY_RUINS_PLATFORM_COUNT = 7
+local SKY_RUINS_PLATFORM_X_OFFSET = 8
+local SKY_RUINS_PLATFORM_SIZE = Vector3.new(6, 1, 5)
+local SKY_RUINS_VOID_DEPTH_BELOW_FLOOR = 60 -- how far below floor level the kill-trigger sits
 
 -- How far below normal floor level side/back walls extend. Only matters for
 -- Dark Mines: its lava sits well below floor height (see buildDarkMines),
@@ -43,8 +54,8 @@ local WALL_DEPTH_BELOW_FLOOR = 20
 
 local MiningService = {}
 
-local lastCheckpoint = {} -- [player] = { CFrame, Order }
-local teleportCooldown = {} -- [player] = true while cooling down after a lava hit
+local lastCheckpoint = {} -- [player] = { [zoneName] = { CFrame, Order } }
+local teleportCooldown = {} -- [player] = true while cooling down after a fall
 
 -- Each "pool" is a fixed set of possible ore spawn slots within a zone (or
 -- part of one, e.g. Dark Mines' entrance vs its treasure platform). Mining a
@@ -337,7 +348,14 @@ local function addCheckpoint(zoneFolder, cframe, size, order)
 	checkpoint:SetAttribute("CheckpointOrder", order)
 end
 
+-- Checkpoints are scoped per-zone (lastCheckpoint[player][zoneName]), not
+-- just per-player: with two parkour zones now (Dark Mines, Sky Ruins), a
+-- single global "last checkpoint" would send a player who falls in Sky
+-- Ruins before ever touching one of its checkpoints back to wherever they
+-- last checkpointed in Dark Mines instead of falling back to Sky Ruins'
+-- own entrance.
 local function setupCheckpoints(zoneFolder)
+	local zoneName = zoneFolder.Name
 	for _, part in zoneFolder:GetChildren() do
 		if part.Name == "Checkpoint" then
 			part.Touched:Connect(function(hit)
@@ -346,17 +364,26 @@ local function setupCheckpoints(zoneFolder)
 					return
 				end
 				local order = part:GetAttribute("CheckpointOrder") or 0
-				local current = lastCheckpoint[player]
+				local zoneCheckpoints = lastCheckpoint[player]
+				if not zoneCheckpoints then
+					zoneCheckpoints = {}
+					lastCheckpoint[player] = zoneCheckpoints
+				end
+				local current = zoneCheckpoints[zoneName]
 				if not current or order >= current.Order then
-					lastCheckpoint[player] = { CFrame = part.CFrame, Order = order }
+					zoneCheckpoints[zoneName] = { CFrame = part.CFrame, Order = order }
 				end
 			end)
 		end
 	end
 end
 
-local function setupLavaKillZone(lava, defaultCFrame)
-	lava.Touched:Connect(function(hit)
+-- Shared by Dark Mines' lava and Sky Ruins' void: teleport back to the
+-- player's last checkpoint IN THIS ZONE (falling back to the zone's own
+-- entrance if they haven't reached one yet), with a debounce so rapid
+-- re-touching the same hazard doesn't spam teleports.
+local function setupFallKillZone(triggerPart, zoneName, defaultCFrame, message)
+	triggerPart.Touched:Connect(function(hit)
 		local player = getCharacterPlayer(hit)
 		if not player or teleportCooldown[player] then
 			return
@@ -366,12 +393,13 @@ local function setupLavaKillZone(lava, defaultCFrame)
 
 		local character = player.Character
 		if character then
-			local checkpoint = lastCheckpoint[player]
+			local zoneCheckpoints = lastCheckpoint[player]
+			local checkpoint = zoneCheckpoints and zoneCheckpoints[zoneName]
 			local targetCFrame = checkpoint and checkpoint.CFrame or defaultCFrame
 			character:PivotTo(targetCFrame + Vector3.new(0, 3, 0))
 		end
 
-		Remotes.ZoneNotice:FireClient(player, "You fell into the lava! Back to your last checkpoint.")
+		Remotes.ZoneNotice:FireClient(player, message)
 
 		task.delay(1, function()
 			teleportCooldown[player] = nil
@@ -419,7 +447,7 @@ local function buildDarkMines(zoneConfig, zonesFolder)
 	lavaLight.Brightness = 2
 	lavaLight.Parent = lava
 
-	setupLavaKillZone(lava, entranceCheckpointCFrame)
+	setupFallKillZone(lava, zoneConfig.Name, entranceCheckpointCFrame, "You fell into the lava! Back to your last checkpoint.")
 
 	-- Cliff-face walls at both ends of the pit (where the entrance floor
 	-- drops off, and where the treasure platform's floor starts), extending
@@ -490,6 +518,103 @@ local function buildDarkMines(zoneConfig, zonesFolder)
 	buildZoneSign(zoneConfig, zoneFolder)
 end
 
+-- Same entrance -> gap -> treasure shape as Dark Mines, but built via
+-- ZoneGeometry throughout (not hardcoded North) since this one's on the
+-- South side. The "hazard" is an open drop rather than solid lava: no floor
+-- in the gap at all, just a kill-trigger far below (see
+-- SKY_RUINS_VOID_DEPTH_BELOW_FLOOR) so a fall reads as a real fall before
+-- it catches you, and it's non-solid (CanCollide false) since there's
+-- nothing to land on along the way down.
+local function buildSkyRuins(zoneConfig, zonesFolder)
+	local zoneFolder = Instance.new("Folder")
+	zoneFolder.Name = zoneConfig.Name
+	zoneFolder.Parent = zonesFolder
+
+	buildWallsAndCeiling(zoneConfig, zoneFolder)
+
+	local width = zoneConfig.RoomSize.X
+
+	addFloorSegment(zoneConfig, zoneFolder, 0, SKY_RUINS_ENTRANCE_DEPTH)
+	buildWeightedOrePool(zoneConfig, zoneFolder, 0, SKY_RUINS_ENTRANCE_DEPTH, zoneConfig.Name .. "_Entrance")
+
+	local entranceCheckpointCFrame = CFrame.new(ZoneGeometry.point(zoneConfig, 0, SKY_RUINS_ENTRANCE_DEPTH - 4, 2))
+	addCheckpoint(zoneFolder, entranceCheckpointCFrame, ZoneGeometry.size(zoneConfig, width - 4, 4, 1), 1)
+
+	-- Void kill-trigger: a large, thick (10 stud), invisible, non-solid
+	-- volume spanning the whole gap, positioned well below floor level.
+	local voidDepthOffset = SKY_RUINS_ENTRANCE_DEPTH + SKY_RUINS_GAP_DEPTH / 2
+	local voidTrigger = Instance.new("Part")
+	voidTrigger.Name = "VoidTrigger"
+	voidTrigger.Anchored = true
+	voidTrigger.Transparency = 1
+	voidTrigger.CanCollide = false
+	voidTrigger.Size = ZoneGeometry.size(zoneConfig, width - 4, SKY_RUINS_GAP_DEPTH, 10)
+	voidTrigger.CFrame = CFrame.new(ZoneGeometry.point(zoneConfig, 0, voidDepthOffset, -SKY_RUINS_VOID_DEPTH_BELOW_FLOOR))
+	voidTrigger.Parent = zoneFolder
+
+	setupFallKillZone(voidTrigger, zoneConfig.Name, entranceCheckpointCFrame, "You fell from the ruins! Back to your last checkpoint.")
+
+	-- Jump platforms across the gap, zigzagging left/right
+	local zStep = SKY_RUINS_GAP_DEPTH / (SKY_RUINS_PLATFORM_COUNT + 1)
+	local midIndex = math.floor(SKY_RUINS_PLATFORM_COUNT / 2) + 1
+
+	for i = 1, SKY_RUINS_PLATFORM_COUNT do
+		local widthOffset = (i % 2 == 0 and 1 or -1) * SKY_RUINS_PLATFORM_X_OFFSET
+		local depthOffset = SKY_RUINS_ENTRANCE_DEPTH + zStep * i
+		local platformCFrame = CFrame.new(ZoneGeometry.point(zoneConfig, widthOffset, depthOffset, 0))
+
+		local platform = Instance.new("Part")
+		platform.Name = "Platform" .. i
+		platform.Anchored = true
+		platform.Size = ZoneGeometry.size(zoneConfig, SKY_RUINS_PLATFORM_SIZE.X, SKY_RUINS_PLATFORM_SIZE.Z, SKY_RUINS_PLATFORM_SIZE.Y)
+		platform.CFrame = platformCFrame
+		platform.Material = zoneConfig.WallMaterial
+		platform.Color = zoneConfig.WallColor
+		platform.Parent = zoneFolder
+
+		if i == midIndex then
+			addCheckpoint(
+				zoneFolder,
+				platformCFrame + Vector3.new(0, 2.5, 0),
+				ZoneGeometry.size(zoneConfig, SKY_RUINS_PLATFORM_SIZE.X, SKY_RUINS_PLATFORM_SIZE.Z, 3),
+				2
+			)
+		end
+	end
+
+	-- Treasure platform (rare ore), past the gap
+	local treasureDepthOffset = SKY_RUINS_ENTRANCE_DEPTH + SKY_RUINS_GAP_DEPTH + SKY_RUINS_TREASURE_DEPTH / 2
+	local treasurePlatform = Instance.new("Part")
+	treasurePlatform.Name = "TreasurePlatform"
+	treasurePlatform.Anchored = true
+	treasurePlatform.Size = ZoneGeometry.size(zoneConfig, width - 10, SKY_RUINS_TREASURE_DEPTH - 4, 2)
+	treasurePlatform.CFrame = CFrame.new(ZoneGeometry.point(zoneConfig, 0, treasureDepthOffset, -1))
+	treasurePlatform.Material = zoneConfig.GroundMaterial
+	treasurePlatform.Color = zoneConfig.GroundColor
+	treasurePlatform.Parent = zoneFolder
+
+	local treasureCheckpointDepthOffset = SKY_RUINS_ENTRANCE_DEPTH + SKY_RUINS_GAP_DEPTH + 3
+	addCheckpoint(
+		zoneFolder,
+		CFrame.new(ZoneGeometry.point(zoneConfig, 0, treasureCheckpointDepthOffset, 2)),
+		ZoneGeometry.size(zoneConfig, width - 10, 4, 3),
+		3
+	)
+
+	local treasurePositions = {}
+	for _ = 1, zoneConfig.RareOreCount do
+		local widthOffset = (math.random() - 0.5) * (width - 16)
+		local depthOffset = treasureDepthOffset + (math.random() - 0.5) * (SKY_RUINS_TREASURE_DEPTH - 8)
+		table.insert(treasurePositions, ZoneGeometry.point(zoneConfig, widthOffset, depthOffset, 0))
+	end
+	registerOrePool(zoneFolder, zoneConfig.Name, zoneConfig.RespawnTime, treasurePositions, zoneConfig.Name .. "_Treasure", function()
+		return zoneConfig.RareOreType, zoneConfig.OreValue * zoneConfig.RareOreType.Multiplier
+	end)
+
+	setupCheckpoints(zoneFolder)
+	buildZoneSign(zoneConfig, zoneFolder)
+end
+
 -- === Zone bootstrap ===
 
 local function ensureZonesExist()
@@ -504,6 +629,8 @@ local function ensureZonesExist()
 	for _, zoneConfig in Config.Zones do
 		if zoneConfig.IsDarkMines then
 			buildDarkMines(zoneConfig, zonesFolder)
+		elseif zoneConfig.IsSkyRuins then
+			buildSkyRuins(zoneConfig, zonesFolder)
 		else
 			buildStandardZone(zoneConfig, zonesFolder)
 		end
