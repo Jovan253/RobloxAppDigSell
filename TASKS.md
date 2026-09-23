@@ -59,9 +59,10 @@ User feedback: barrier text confirmed working (asked for it in round 3), grey vo
 
 ## Follow-up round 5 (2026-09-23)
 
-- [x] Sign post still overlapped the board after the first fix (matched thickness but not vertical extent) — now stops exactly at the board's bottom edge, no overlap
-- [x] Dark Mines lava pit — side/back walls now extend well below floor level so the pit has continuous cave wall on its sides instead of open void (commit `b65afe0`)
-- [ ] Playtest both live in Studio — not tested yet
+- [x] Sign post still overlapped the board after the first fix (matched thickness but not vertical extent) — now stops exactly at the board's bottom edge, no overlap — confirmed fixed
+- [x] Dark Mines lava pit — side/back walls now extend well below floor level so the pit has continuous cave wall on its sides instead of open void (commit `b65afe0`) — confirmed good on the long sides
+- [x] Pit was still open void at the front/back ends (entrance drop-off and treasure-platform edge) — added matching end walls there too (commit `b0331a9`)
+- [ ] Playtest the pit end walls live in Studio — not tested yet
 
 ## Future ideas (not in MVP scope)
 
