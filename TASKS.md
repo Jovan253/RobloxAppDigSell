@@ -31,8 +31,8 @@ User's ideas: fix the grey/flat map, spread zones/ores out more, more zones, mor
 - [x] Playtest map/ore visuals live in Studio — confirmed "looks ok for most part" (2026-09-23)
 - [x] Playtest the Dark Mines lava/parkour/checkpoint flow live — confirmed working (2026-09-23, across this and the following rounds' wall/sign fixes)
 - [x] Create the "Jumpscare Prank" developer product in the Creator Dashboard — done, ID 3714340075, wired into `Config.JumpscareProductId`
-- [ ] Playtest the Jumpscare Prank purchase/effect live — not tested yet (new Store row should now show up in the shop panel)
-- [ ] Find/set a real sound asset ID for the jumpscare effect (`JumpscareEffect.client.luau`'s `SoundId` is blank) — flash effect works without it, sound is optional polish
+- [x] Find/set a real sound asset ID for the jumpscare effect — done (139162107746216), wired into `JumpscareEffect.client.luau`
+- [ ] Playtest the Jumpscare Prank purchase/effect (flash + sound) live — not tested yet
 - [ ] Gotcha if re-testing: `MiningService` only builds `MiningZones` if that folder doesn't already exist in Workspace — if Studio's Edit-mode Workspace somehow still has a leftover one from before, delete it manually or the old map will keep showing
 
 ## Follow-up round 2 (2026-09-23, based on first live look)
