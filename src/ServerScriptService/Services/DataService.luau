@@ -14,7 +14,7 @@ local playerStore = DataStoreService:GetDataStore(Config.DataStoreName)
 
 local DataService = {}
 
-local profiles = {} -- [player] = { Cash, Gems, PickaxeTier, UnlockedZones, Rebirths, RebirthMultiplier, CollectedOreTypes }
+local profiles = {} -- [player] = { Cash, Gems, PickaxeTier, UnlockedZones, Rebirths, RebirthMultiplier, CollectedOreTypes, ClaimedOreTypes }
 
 local function defaultProfile()
 	return {
@@ -24,7 +24,8 @@ local function defaultProfile()
 		UnlockedZones = { "Zone1" },
 		Rebirths = 0,
 		RebirthMultiplier = 1,
-		CollectedOreTypes = {}, -- set: [oreTypeName] = true
+		CollectedOreTypes = {}, -- set: [oreTypeName] = true -- discovered (Journal reveals it)
+		ClaimedOreTypes = {}, -- set: [oreTypeName] = true -- Journal reward already taken
 	}
 end
 
@@ -100,6 +101,11 @@ local function setupPlayerData(player, profile)
 	collectedOreTypes.Name = "CollectedOreTypes"
 	collectedOreTypes.Value = setToCommaString(profile.CollectedOreTypes)
 	collectedOreTypes.Parent = playerData
+
+	local claimedOreTypes = Instance.new("StringValue")
+	claimedOreTypes.Name = "ClaimedOreTypes"
+	claimedOreTypes.Value = setToCommaString(profile.ClaimedOreTypes)
+	claimedOreTypes.Parent = playerData
 
 	-- Not part of `profile`/DataStore -- gamepass ownership is authoritative
 	-- on Roblox's side and re-checked by MarketplaceService each session.
@@ -178,8 +184,10 @@ function DataService.AddGems(player, amount)
 	DataService.SetGems(player, profile.Gems + amount)
 end
 
--- Returns true only the first time this ore type is ever recorded for this
--- player (see Config.CollectionBonusGems) -- false if already collected.
+-- Returns true only the first time this ore type is ever mined by this
+-- player -- false if already discovered. Just marks it "found" (the
+-- Journal reveals its name/value); the reward for discovering it is a
+-- separate manual claim, see MarkOreTypeClaimed/ClaimGems in Config.
 function DataService.MarkOreTypeCollected(player, oreTypeName)
 	local profile = profiles[player]
 	if not profile or profile.CollectedOreTypes[oreTypeName] then
@@ -190,6 +198,28 @@ function DataService.MarkOreTypeCollected(player, oreTypeName)
 	local playerData = player:FindFirstChild("PlayerData")
 	if playerData then
 		playerData.CollectedOreTypes.Value = setToCommaString(profile.CollectedOreTypes)
+	end
+	return true
+end
+
+function DataService.HasCollectedOreType(player, oreTypeName)
+	local profile = profiles[player]
+	return profile ~= nil and profile.CollectedOreTypes[oreTypeName] == true
+end
+
+-- Returns true only if this ore type was discovered but not yet claimed
+-- (and marks it claimed) -- false if never discovered or already claimed.
+-- Doesn't grant the reward itself; see CollectionService.
+function DataService.MarkOreTypeClaimed(player, oreTypeName)
+	local profile = profiles[player]
+	if not profile or not profile.CollectedOreTypes[oreTypeName] or profile.ClaimedOreTypes[oreTypeName] then
+		return false
+	end
+
+	profile.ClaimedOreTypes[oreTypeName] = true
+	local playerData = player:FindFirstChild("PlayerData")
+	if playerData then
+		playerData.ClaimedOreTypes.Value = setToCommaString(profile.ClaimedOreTypes)
 	end
 	return true
 end
@@ -230,10 +260,11 @@ local function loadProfile(player)
 
 	local profile = result or defaultProfile()
 
-	-- Migration: profiles saved before Gems/CollectedOreTypes existed won't
-	-- have these fields at all.
+	-- Migration: profiles saved before Gems/CollectedOreTypes/ClaimedOreTypes
+	-- existed won't have these fields at all.
 	profile.Gems = profile.Gems or 0
 	profile.CollectedOreTypes = profile.CollectedOreTypes or {}
+	profile.ClaimedOreTypes = profile.ClaimedOreTypes or {}
 
 	if Config.IsAdmin(player.UserId) then
 		profile.PickaxeTier = #Config.PickaxeTiers

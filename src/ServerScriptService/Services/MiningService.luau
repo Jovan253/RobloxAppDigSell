@@ -833,9 +833,10 @@ local function applyHit(node, player)
 		DataService.AddGems(player, gems)
 	end
 
+	-- Discovering a new type is free/automatic; the Journal reward for it
+	-- is a separate manual claim (see CollectionService), not granted here.
 	if oreTypeName and DataService.MarkOreTypeCollected(player, oreTypeName) then
-		DataService.AddGems(player, Config.CollectionBonusGems)
-		Remotes.ZoneNotice:FireClient(player, ("New ore discovered: %s! +%d Gems"):format(oreTypeName, Config.CollectionBonusGems))
+		Remotes.ZoneNotice:FireClient(player, ("New ore discovered: %s! Claim your reward in the Journal."):format(oreTypeName))
 	end
 
 	local poolId = node:GetAttribute("PoolId")

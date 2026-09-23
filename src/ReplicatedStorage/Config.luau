@@ -21,10 +21,16 @@ local Config = {}
 -- `OreTypes` entries are picked per ore node by weighted random (Weight is
 -- relative, doesn't need to sum to 100). `Multiplier` scales the zone's base
 -- `OreValue`. `Glow` gives the ore a small glowing accent + light -- use it
--- to make rare ore types visually pop. `Gems` is how many Gems mining that
--- ore grants (see MiningService/Config.CollectionBonusGems) -- 0 for
--- Common, 1 for Uncommon, 3 for Rare (including each zone's RareOreType),
--- uniform across zones.
+-- to make rare ore types visually pop.
+--
+-- `Gems` is the ONGOING per-mine reward (0 Common / 1 Uncommon / 3 Rare,
+-- uniform across zones) -- granted automatically every time that ore is
+-- mined. `ClaimGems` is the ONE-TIME Collection Journal reward for
+-- discovering that type for the first time -- NOT granted automatically;
+-- the player has to open the Journal and claim it (see CollectionService).
+-- Unlike Gems, ClaimGems scales by zone as well as rarity, since reaching a
+-- later zone is itself an achievement -- e.g. the hub's Quartz (its rarest
+-- ore) is only worth 1 claim Gem, while Sky Ruins' Sky Shard is worth 15.
 Config.Zones = {
 	{
 		Name = "Zone1",
@@ -41,9 +47,9 @@ Config.Zones = {
 		WallColor = Color3.fromRGB(150, 140, 120),
 		OreCount = 75,
 		OreTypes = {
-			{ Name = "Sandstone", Material = Enum.Material.Sandstone, Color = Color3.fromRGB(214, 187, 129), Multiplier = 1, Weight = 70, Glow = false, Gems = 0 },
-			{ Name = "Granite", Material = Enum.Material.Slate, Color = Color3.fromRGB(130, 125, 120), Multiplier = 2, Weight = 20, Glow = false, Gems = 1 },
-			{ Name = "Quartz", Material = Enum.Material.Glass, Color = Color3.fromRGB(240, 240, 250), Multiplier = 5, Weight = 10, Glow = true, Gems = 3 },
+			{ Name = "Sandstone", Material = Enum.Material.Sandstone, Color = Color3.fromRGB(214, 187, 129), Multiplier = 1, Weight = 70, Glow = false, Gems = 0, ClaimGems = 0 },
+			{ Name = "Granite", Material = Enum.Material.Slate, Color = Color3.fromRGB(130, 125, 120), Multiplier = 2, Weight = 20, Glow = false, Gems = 1, ClaimGems = 1 },
+			{ Name = "Quartz", Material = Enum.Material.Glass, Color = Color3.fromRGB(240, 240, 250), Multiplier = 5, Weight = 10, Glow = true, Gems = 3, ClaimGems = 1 },
 		},
 	},
 	{
@@ -62,9 +68,9 @@ Config.Zones = {
 		WallColor = Color3.fromRGB(45, 45, 52),
 		OreCount = 65,
 		OreTypes = {
-			{ Name = "Iron Ore", Material = Enum.Material.Metal, Color = Color3.fromRGB(150, 150, 155), Multiplier = 1, Weight = 70, Glow = false, Gems = 0 },
-			{ Name = "Silver Ore", Material = Enum.Material.Metal, Color = Color3.fromRGB(205, 205, 210), Multiplier = 3, Weight = 20, Glow = false, Gems = 1 },
-			{ Name = "Emerald", Material = Enum.Material.Glass, Color = Color3.fromRGB(60, 220, 120), Multiplier = 6, Weight = 10, Glow = true, Gems = 3 },
+			{ Name = "Iron Ore", Material = Enum.Material.Metal, Color = Color3.fromRGB(150, 150, 155), Multiplier = 1, Weight = 70, Glow = false, Gems = 0, ClaimGems = 0 },
+			{ Name = "Silver Ore", Material = Enum.Material.Metal, Color = Color3.fromRGB(205, 205, 210), Multiplier = 3, Weight = 20, Glow = false, Gems = 1, ClaimGems = 2 },
+			{ Name = "Emerald", Material = Enum.Material.Glass, Color = Color3.fromRGB(60, 220, 120), Multiplier = 6, Weight = 10, Glow = true, Gems = 3, ClaimGems = 4 },
 		},
 	},
 	{
@@ -83,9 +89,9 @@ Config.Zones = {
 		WallColor = Color3.fromRGB(60, 45, 80),
 		OreCount = 65,
 		OreTypes = {
-			{ Name = "Amethyst", Material = Enum.Material.Glass, Color = Color3.fromRGB(150, 90, 220), Multiplier = 1, Weight = 70, Glow = true, Gems = 0 },
-			{ Name = "Sapphire", Material = Enum.Material.Glass, Color = Color3.fromRGB(60, 100, 220), Multiplier = 3, Weight = 20, Glow = true, Gems = 1 },
-			{ Name = "Diamond", Material = Enum.Material.Ice, Color = Color3.fromRGB(190, 240, 250), Multiplier = 6, Weight = 10, Glow = true, Gems = 3 },
+			{ Name = "Amethyst", Material = Enum.Material.Glass, Color = Color3.fromRGB(150, 90, 220), Multiplier = 1, Weight = 70, Glow = true, Gems = 0, ClaimGems = 0 },
+			{ Name = "Sapphire", Material = Enum.Material.Glass, Color = Color3.fromRGB(60, 100, 220), Multiplier = 3, Weight = 20, Glow = true, Gems = 1, ClaimGems = 3 },
+			{ Name = "Diamond", Material = Enum.Material.Ice, Color = Color3.fromRGB(190, 240, 250), Multiplier = 6, Weight = 10, Glow = true, Gems = 3, ClaimGems = 6 },
 		},
 	},
 	{
@@ -112,12 +118,12 @@ Config.Zones = {
 		WallColor = Color3.fromRGB(15, 13, 15),
 		OreCount = 25, -- safe ore in the entrance area only
 		OreTypes = {
-			{ Name = "Obsidian Shard", Material = Enum.Material.Basalt, Color = Color3.fromRGB(40, 35, 45), Multiplier = 1, Weight = 80, Glow = false, Gems = 0 },
-			{ Name = "Onyx Shard", Material = Enum.Material.Basalt, Color = Color3.fromRGB(55, 40, 60), Multiplier = 3, Weight = 20, Glow = false, Gems = 1 },
+			{ Name = "Obsidian Shard", Material = Enum.Material.Basalt, Color = Color3.fromRGB(40, 35, 45), Multiplier = 1, Weight = 80, Glow = false, Gems = 0, ClaimGems = 0 },
+			{ Name = "Onyx Shard", Material = Enum.Material.Basalt, Color = Color3.fromRGB(55, 40, 60), Multiplier = 3, Weight = 20, Glow = false, Gems = 1, ClaimGems = 5 },
 		},
 		-- Rare ore is hand-placed on the treasure platform past the lava,
 		-- not part of the weighted OreTypes scatter.
-		RareOreType = { Name = "Cursed Ruby", Material = Enum.Material.Neon, Color = Color3.fromRGB(200, 20, 20), Multiplier = 8, Glow = true, Gems = 3 },
+		RareOreType = { Name = "Cursed Ruby", Material = Enum.Material.Neon, Color = Color3.fromRGB(200, 20, 20), Multiplier = 8, Glow = true, Gems = 3, ClaimGems = 10 },
 		RareOreCount = 10,
 		LavaColor = Color3.fromRGB(230, 90, 20),
 	},
@@ -143,12 +149,12 @@ Config.Zones = {
 		WallColor = Color3.fromRGB(170, 165, 150),
 		OreCount = 25, -- safe ore in the entrance area only
 		OreTypes = {
-			{ Name = "Weathered Stone", Material = Enum.Material.Concrete, Color = Color3.fromRGB(180, 175, 160), Multiplier = 1, Weight = 80, Glow = false, Gems = 0 },
-			{ Name = "Carved Sandstone", Material = Enum.Material.Sandstone, Color = Color3.fromRGB(200, 160, 100), Multiplier = 3, Weight = 20, Glow = false, Gems = 1 },
+			{ Name = "Weathered Stone", Material = Enum.Material.Concrete, Color = Color3.fromRGB(180, 175, 160), Multiplier = 1, Weight = 80, Glow = false, Gems = 0, ClaimGems = 0 },
+			{ Name = "Carved Sandstone", Material = Enum.Material.Sandstone, Color = Color3.fromRGB(200, 160, 100), Multiplier = 3, Weight = 20, Glow = false, Gems = 1, ClaimGems = 8 },
 		},
 		-- Rare ore is hand-placed on the treasure platform past the gap,
 		-- not part of the weighted OreTypes scatter.
-		RareOreType = { Name = "Sky Shard", Material = Enum.Material.Neon, Color = Color3.fromRGB(120, 200, 255), Multiplier = 8, Glow = true, Gems = 3 },
+		RareOreType = { Name = "Sky Shard", Material = Enum.Material.Neon, Color = Color3.fromRGB(120, 200, 255), Multiplier = 8, Glow = true, Gems = 3, ClaimGems = 15 },
 		RareOreCount = 10,
 	},
 }
@@ -176,10 +182,6 @@ Config.Rebirth = {
 	MultiplierPerRebirth = 0.5, -- +50% cash per rebirth, stacking
 }
 
--- One-time bonus for mining an ore type for the first time ever (see
--- DataService.MarkOreTypeCollected / the Collection Journal). Separate from
--- the per-mine Gems value on each ore type in Config.Zones.
-Config.CollectionBonusGems = 10
 
 Config.DataStoreName = "DigAndSellPlayerData_v1"
 Config.AutosaveInterval = 120 -- seconds
