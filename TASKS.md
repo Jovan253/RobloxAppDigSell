@@ -47,7 +47,19 @@ User feedback after seeing the map/ore/Dark Mines work: layout felt like one lon
 
 - [x] Barrier text labels — "`<Zone> / N Cash to Unlock`" on each locked barrier, hidden once unlocked
 - [x] Replace default grey Baseplate with themed ground fill (`EnvironmentService`) + light distance fog, so the map doesn't bleed into an ugly infinite grey sandbox at the edges
-- [ ] Playtest both live in Studio — not tested yet
+- [x] Playtest both live in Studio — confirmed, "barrier is fine" (2026-09-23)
+
+## Follow-up round 4 (2026-09-23)
+
+User feedback: barrier text confirmed working (asked for it in round 3), grey void around the map still bothering them (addressed above), plus new requests — wooden "what zone is this" signs, and zones arranged one-per-side of the hub rather than fanned along one edge.
+
+- [x] Wooden zone-name signs — post + board at each zone's entrance (hub gets one at its center), labeled on both readable faces, visible regardless of lock state (unlike the barrier label, which disappears once unlocked)
+- [x] Radial hub layout — Zone2 (West), Zone3 (East), Zone4/Dark Mines (North), South left open for spawn. Added `ZoneGeometry` (shared orientation-aware local-to-world transform) so MiningService/ZoneBarriers/EnvironmentService all agree on where each zone's entrance and footprint actually are; Dark Mines' own lava/parkour geometry stays hardcoded North-only (documented in `Config.luau`)
+- [ ] Playtest both live in Studio — not tested yet, and this was a nontrivial geometry refactor (verified by hand-tracing the coordinate math, not in-engine)
+
+## Design questions raised, not yet built (2026-09-23)
+
+User asked for a recommendation on a Speed Boost (via monetization / gem system / wheel spin) and what a Gem system could look like (how earned, what it buys). Answered with a proposal in conversation — see chat history for the recommendation once we're ready to implement; nothing built yet pending user decision.
 
 ## Future ideas (not in MVP scope)
 
