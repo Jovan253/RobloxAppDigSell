@@ -15,7 +15,7 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] 6. Rebirth system — UI added as a section in the shop panel (2-click confirm), wired to `Remotes.Rebirth`
 - [x] 7. Leaderboard — `LeaderboardService` (OrderedDataStore, all-time, updates every 30s) + `LeaderboardUi.client.luau` panel ("Ranks" button / "L" key)
 - [x] 8. Monetization — 2x Cash gamepass (1988462502) + Cash Pack developer products (Small 3714204369/5000, Huge 3714204408/50000), `MarketplaceService` + shop "Store" section
-- [ ] 9. Polish — in progress, see "Polish: map & Dark Mines" below
+- [x] 9. Polish — map/ore/Dark Mines overhaul complete across 5 follow-up rounds, all confirmed live (see "Polish: map & Dark Mines" and "Follow-up round 2-5" below); further polish ideas (Gem system, Wheel Spin, Auto-Mine) deferred to "Future ideas"
 - [ ] 10. Playtest, bugfix, thumbnail/icon, store page copy, soft launch
 
 ## Polish: map & Dark Mines (decided 2026-09-22)
@@ -32,7 +32,7 @@ User's ideas: fix the grey/flat map, spread zones/ores out more, more zones, mor
 - [x] Playtest the Dark Mines lava/parkour/checkpoint flow live — confirmed working (2026-09-23, across this and the following rounds' wall/sign fixes)
 - [x] Create the "Jumpscare Prank" developer product in the Creator Dashboard — done, ID 3714340075, wired into `Config.JumpscareProductId`
 - [x] Find/set a real sound asset ID for the jumpscare effect — done (139162107746216), wired into `JumpscareEffect.client.luau`
-- [ ] Playtest the Jumpscare Prank purchase/effect (flash + sound) live — not tested yet
+- [x] Playtest the Jumpscare Prank purchase/effect (flash + sound) live — confirmed working; tuned to white flash + fade matching audio length per feedback, "satisfactory" (2026-09-23)
 - [ ] Gotcha if re-testing: `MiningService` only builds `MiningZones` if that folder doesn't already exist in Workspace — if Studio's Edit-mode Workspace somehow still has a leftover one from before, delete it manually or the old map will keep showing
 
 ## Follow-up round 2 (2026-09-23, based on first live look)
