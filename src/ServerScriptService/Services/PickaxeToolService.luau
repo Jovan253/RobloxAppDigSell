@@ -23,13 +23,70 @@ local sourceAsset = ServerStorage:WaitForChild("PickaxeAsset")
 
 local toolTemplates = {}
 
+-- PickaxeAsset turned out to be a Model, not a ready-to-equip Tool (free
+-- Toolbox "pickaxe" results aren't always packaged as actual Tools). Builds
+-- a real Tool around it: picks a part to serve as the required "Handle"
+-- (PrimaryPart if set, an existing part literally named Handle, or just the
+-- first BasePart found) and welds every other part to it so the whole
+-- model moves together.
 local function buildToolTemplate(tierIndex)
 	local tier = Config.PickaxeTiers[tierIndex]
+	local sourceClone = sourceAsset:Clone()
 
-	local tool = sourceAsset:Clone()
+	local tool = Instance.new("Tool")
 	tool.Name = tier and tier.Name or "Pickaxe"
+	tool.RequiresHandle = true
 	tool.CanBeDropped = false
 	tool:SetAttribute("IsPickaxe", true)
+
+	if sourceClone:IsA("Tool") then
+		-- Already a proper Tool (e.g. a different asset later) -- just move
+		-- its contents into ours so the rest of this function (script
+		-- stripping, CanQuery) still applies uniformly.
+		for _, child in sourceClone:GetChildren() do
+			child.Parent = tool
+		end
+		sourceClone:Destroy()
+	else
+		local handle = sourceClone.PrimaryPart or sourceClone:FindFirstChild("Handle", true)
+		if not handle then
+			for _, descendant in sourceClone:GetDescendants() do
+				if descendant:IsA("BasePart") then
+					handle = descendant
+					break
+				end
+			end
+		end
+
+		if not handle then
+			warn("PickaxeToolService: PickaxeAsset has no BasePart to use as a Handle")
+			sourceClone:Destroy()
+			return tool
+		end
+
+		handle.Name = "Handle"
+
+		local parts = {}
+		for _, descendant in sourceClone:GetDescendants() do
+			if descendant:IsA("BasePart") then
+				table.insert(parts, descendant)
+			end
+		end
+
+		for _, child in sourceClone:GetChildren() do
+			child.Parent = tool
+		end
+		sourceClone:Destroy()
+
+		for _, part in parts do
+			if part ~= handle then
+				local weld = Instance.new("WeldConstraint")
+				weld.Part0 = handle
+				weld.Part1 = part
+				weld.Parent = handle
+			end
+		end
+	end
 
 	-- Strip any scripts the asset came with -- a Toolbox "pickaxe" could be
 	-- a full scripted kit assuming its own hit-detection, which we don't
