@@ -41,7 +41,13 @@ User feedback after seeing the map/ore/Dark Mines work: layout felt like one lon
 - [x] Hub-and-spoke layout — Zone1 (Sunny Quarry) is now a wide-open central hub with no walls; Zone2/3/4 sit in separate X lanes along its north edge, each reachable directly from the hub rather than one zone after another
 - [x] Locked-zone barriers — red translucent Part blocks each locked zone's entrance, client-side only (`ZoneBarriers.client.luau`) so it's per-player correct (blocks you specifically until *you* unlock that zone) without needing per-player CollisionGroups; real security stays server-side in `MiningService`'s existing unlock check
 - [x] Destroy-and-relocate ore respawn — mining now destroys the node outright (no more ghost-transparency) and respawns a new one at a random slot from that zone's fixed pool of positions, so ore drifts around instead of always reappearing in the same spot
-- [ ] Playtest all of the above live in Studio — not tested yet
+- [x] Playtest hub/barriers/ore-respawn live in Studio — confirmed working, "barrier is fine" (2026-09-23)
+
+## Follow-up round 3 (2026-09-23)
+
+- [x] Barrier text labels — "`<Zone> / N Cash to Unlock`" on each locked barrier, hidden once unlocked
+- [x] Replace default grey Baseplate with themed ground fill (`EnvironmentService`) + light distance fog, so the map doesn't bleed into an ugly infinite grey sandbox at the edges
+- [ ] Playtest both live in Studio — not tested yet
 
 ## Future ideas (not in MVP scope)
 
