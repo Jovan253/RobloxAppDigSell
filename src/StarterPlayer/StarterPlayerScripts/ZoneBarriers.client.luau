@@ -12,6 +12,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local ZoneGeometry = require(ReplicatedStorage:WaitForChild("ZoneGeometry"))
 
 local player = Players.LocalPlayer
 local playerData = player:WaitForChild("PlayerData")
@@ -35,9 +36,7 @@ local barriers = {} -- [zoneName] = { part = Part, gui = SurfaceGui }
 
 for _, zoneConfig in Config.Zones do
 	if zoneConfig.UnlockCost > 0 then
-		local size = zoneConfig.RoomSize
-		local origin = zoneConfig.Origin
-		local height = zoneConfig.Enclosed and size.Y or 10
+		local height = zoneConfig.Enclosed and zoneConfig.RoomSize.Y or 10
 
 		local barrier = Instance.new("Part")
 		barrier.Name = "ZoneBarrier_" .. zoneConfig.Name
@@ -46,16 +45,15 @@ for _, zoneConfig in Config.Zones do
 		barrier.Material = Enum.Material.ForceField
 		barrier.Color = Color3.fromRGB(200, 30, 30)
 		barrier.Transparency = 0.6
-		barrier.Size = Vector3.new(size.X, height, 1)
-		barrier.CFrame = CFrame.new(origin.X, origin.Y + height / 2, origin.Z)
+		barrier.Size = ZoneGeometry.size(zoneConfig, zoneConfig.RoomSize.X, 1, height)
+		barrier.CFrame = CFrame.new(ZoneGeometry.point(zoneConfig, 0, 0, height / 2))
 		barrier.Parent = Workspace
 
-		-- Face = Front means the label renders on the -Z side of the part,
-		-- which (since none of this is rotated) is the side facing the hub
-		-- -- i.e. readable as you walk up to the entrance.
+		-- Which face reads as "facing the hub" depends on orientation --
+		-- see ZoneGeometry.FaceTowardHub.
 		local gui = Instance.new("SurfaceGui")
 		gui.Name = "Label"
-		gui.Face = Enum.NormalId.Front
+		gui.Face = ZoneGeometry.FaceTowardHub[zoneConfig.Orientation or "North"]
 		gui.LightInfluence = 0
 		gui.Parent = barrier
 

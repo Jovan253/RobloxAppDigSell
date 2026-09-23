@@ -14,6 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
+local ZoneGeometry = require(ReplicatedStorage:WaitForChild("ZoneGeometry"))
 local DataService = require(script.Parent.DataService)
 local MarketplaceService = require(script.Parent.MarketplaceService)
 
@@ -136,21 +137,21 @@ end
 -- Jittered-grid slots: divides the usable floor area into a roughly
 -- OreCount-sized grid and returns one slot position per cell with random
 -- jitter, so coverage is even without needing true collision-based
--- placement.
-local function computeGridSlots(zoneConfig, areaOrigin, areaDepth)
-	local size = zoneConfig.RoomSize
+-- placement. startDepth/depthRange are zone-local (0 = at the hub-facing
+-- edge), letting Dark Mines carve out just its entrance sub-area.
+local function computeGridSlots(zoneConfig, startDepth, depthRange)
 	local margin = 8
-	local usableX = size.X - margin * 2
-	local usableZ = areaDepth - margin * 2
+	local usableWidth = zoneConfig.RoomSize.X - margin * 2
+	local usableDepth = depthRange - margin * 2
 	local positions = {}
-	if usableX <= 0 or usableZ <= 0 then
+	if usableWidth <= 0 or usableDepth <= 0 then
 		return positions
 	end
 
-	local cols = math.max(1, math.floor(math.sqrt(zoneConfig.OreCount * usableX / usableZ)))
+	local cols = math.max(1, math.floor(math.sqrt(zoneConfig.OreCount * usableWidth / usableDepth)))
 	local rows = math.max(1, math.ceil(zoneConfig.OreCount / cols))
-	local cellX = usableX / cols
-	local cellZ = usableZ / rows
+	local cellWidth = usableWidth / cols
+	local cellDepth = usableDepth / rows
 
 	for row = 0, rows - 1 do
 		for col = 0, cols - 1 do
@@ -158,19 +159,19 @@ local function computeGridSlots(zoneConfig, areaOrigin, areaDepth)
 				break
 			end
 
-			local baseX = areaOrigin.X - size.X / 2 + margin + cellX * (col + 0.5)
-			local baseZ = areaOrigin.Z + margin + cellZ * (row + 0.5)
-			local jitterX = (math.random() - 0.5) * cellX * 0.6
-			local jitterZ = (math.random() - 0.5) * cellZ * 0.6
-			table.insert(positions, Vector3.new(baseX + jitterX, areaOrigin.Y, baseZ + jitterZ))
+			local baseWidth = -zoneConfig.RoomSize.X / 2 + margin + cellWidth * (col + 0.5)
+			local baseDepth = startDepth + margin + cellDepth * (row + 0.5)
+			local jitterWidth = (math.random() - 0.5) * cellWidth * 0.6
+			local jitterDepth = (math.random() - 0.5) * cellDepth * 0.6
+			table.insert(positions, ZoneGeometry.point(zoneConfig, baseWidth + jitterWidth, baseDepth + jitterDepth, 0))
 		end
 	end
 
 	return positions
 end
 
-local function buildWeightedOrePool(zoneConfig, zoneFolder, areaOrigin, areaDepth, poolId)
-	local positions = computeGridSlots(zoneConfig, areaOrigin, areaDepth)
+local function buildWeightedOrePool(zoneConfig, zoneFolder, startDepth, depthRange, poolId)
+	local positions = computeGridSlots(zoneConfig, startDepth, depthRange)
 	registerOrePool(zoneFolder, zoneConfig.Name, zoneConfig.RespawnTime, positions, poolId, function()
 		local oreType = pickOreType(zoneConfig.OreTypes)
 		return oreType, zoneConfig.OreValue * oreType.Multiplier
@@ -184,15 +185,12 @@ end
 -- spanning the whole room would sit as an invisible solid slab UNDER the
 -- lava part, making the "pit" unreachable and the lava never touchable.
 
-local function addFloorSegment(zoneConfig, zoneFolder, startZ, depth)
-	local size = zoneConfig.RoomSize
-	local origin = zoneConfig.Origin
-
+local function addFloorSegment(zoneConfig, zoneFolder, startDepth, depth)
 	local floor = Instance.new("Part")
 	floor.Name = "Floor"
 	floor.Anchored = true
-	floor.Size = Vector3.new(size.X, 2, depth)
-	floor.CFrame = CFrame.new(origin.X, origin.Y - 1, startZ + depth / 2)
+	floor.Size = ZoneGeometry.size(zoneConfig, zoneConfig.RoomSize.X, depth, 2)
+	floor.CFrame = CFrame.new(ZoneGeometry.point(zoneConfig, 0, startDepth + depth / 2, -1))
 	floor.Material = zoneConfig.GroundMaterial
 	floor.Color = zoneConfig.GroundColor
 	floor.Parent = zoneFolder
@@ -203,34 +201,88 @@ local function buildWallsAndCeiling(zoneConfig, zoneFolder)
 		return
 	end
 
-	local size = zoneConfig.RoomSize
-	local origin = zoneConfig.Origin
+	local width = zoneConfig.RoomSize.X
+	local depth = zoneConfig.RoomSize.Z
+	local height = zoneConfig.RoomSize.Y
 
 	local ceiling = Instance.new("Part")
 	ceiling.Name = "Ceiling"
 	ceiling.Anchored = true
-	ceiling.Size = Vector3.new(size.X, 2, size.Z)
-	ceiling.CFrame = CFrame.new(origin.X, origin.Y + size.Y, origin.Z + size.Z / 2)
+	ceiling.Size = ZoneGeometry.size(zoneConfig, width, depth, 2)
+	ceiling.CFrame = CFrame.new(ZoneGeometry.point(zoneConfig, 0, depth / 2, height))
 	ceiling.Material = zoneConfig.WallMaterial
 	ceiling.Color = zoneConfig.WallColor
 	ceiling.Parent = zoneFolder
 
-	local function addWall(cframe, wallSize)
+	local function addWall(widthOffset, depthOffset, wallWidth, wallDepth)
 		local wall = Instance.new("Part")
 		wall.Name = "Wall"
 		wall.Anchored = true
-		wall.Size = wallSize
-		wall.CFrame = cframe
+		wall.Size = ZoneGeometry.size(zoneConfig, wallWidth, wallDepth, height)
+		wall.CFrame = CFrame.new(ZoneGeometry.point(zoneConfig, widthOffset, depthOffset, height / 2))
 		wall.Material = zoneConfig.WallMaterial
 		wall.Color = zoneConfig.WallColor
 		wall.Parent = zoneFolder
 	end
 
 	-- Left/right walls run the full depth; a back wall closes the far end.
-	-- The near end (facing the previous zone) is left open as the entrance.
-	addWall(CFrame.new(origin.X - size.X / 2, origin.Y + size.Y / 2, origin.Z + size.Z / 2), Vector3.new(2, size.Y, size.Z))
-	addWall(CFrame.new(origin.X + size.X / 2, origin.Y + size.Y / 2, origin.Z + size.Z / 2), Vector3.new(2, size.Y, size.Z))
-	addWall(CFrame.new(origin.X, origin.Y + size.Y / 2, origin.Z + size.Z), Vector3.new(size.X, size.Y, 2))
+	-- The near end (facing the hub) is left open as the entrance.
+	addWall(-width / 2, depth / 2, 2, depth)
+	addWall(width / 2, depth / 2, 2, depth)
+	addWall(0, depth, width, 2)
+end
+
+local function buildZoneSign(zoneConfig, zoneFolder)
+	-- Hub gets a sign at its center; spoke zones get one just past their
+	-- entrance, so it's still visible once the (client-only) locked barrier
+	-- is gone and there's otherwise no "what zone is this" indicator.
+	local depthOffset = zoneConfig.UnlockCost > 0 and 6 or zoneConfig.RoomSize.Z / 2
+	local position = ZoneGeometry.point(zoneConfig, 0, depthOffset, 0)
+
+	local post = Instance.new("Part")
+	post.Name = "SignPost"
+	post.Anchored = true
+	post.Material = Enum.Material.Wood
+	post.Color = Color3.fromRGB(92, 64, 40)
+	post.Size = Vector3.new(1, 7, 1)
+	post.CFrame = CFrame.new(position + Vector3.new(0, 3.5, 0))
+	post.Parent = zoneFolder
+
+	local board = Instance.new("Part")
+	board.Name = "SignBoard"
+	board.Anchored = true
+	board.Material = Enum.Material.Wood
+	board.Color = Color3.fromRGB(120, 85, 55)
+	-- ZoneGeometry.size puts the "thin" (0.6) dimension on whichever world
+	-- axis is this zone's depth axis, so the board is always thin in the
+	-- direction you walk through it, not just thin in world Z.
+	board.Size = ZoneGeometry.size(zoneConfig, 8, 0.6, 3)
+	board.CFrame = CFrame.new(position + Vector3.new(0, 6, 0))
+	board.Parent = zoneFolder
+
+	-- Readable faces depend on orientation too: Front/Back (normal +-Z) for
+	-- a North/South zone, but Left/Right (normal +-X) for East/West -- using
+	-- Front/Back there would put the label on the sign's thin edge.
+	local readableFaces = (zoneConfig.Orientation == "East" or zoneConfig.Orientation == "West")
+		and { Enum.NormalId.Left, Enum.NormalId.Right }
+		or { Enum.NormalId.Front, Enum.NormalId.Back }
+
+	for _, face in readableFaces do
+		local gui = Instance.new("SurfaceGui")
+		gui.Face = face
+		gui.LightInfluence = 0
+		gui.Parent = board
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.BackgroundTransparency = 1
+		label.Font = Enum.Font.GothamBold
+		label.TextColor3 = Color3.fromRGB(255, 240, 210)
+		label.TextStrokeTransparency = 0.3
+		label.TextScaled = true
+		label.Text = zoneConfig.DisplayName
+		label.Parent = gui
+	end
 end
 
 local function buildStandardZone(zoneConfig, zonesFolder)
@@ -238,9 +290,10 @@ local function buildStandardZone(zoneConfig, zonesFolder)
 	zoneFolder.Name = zoneConfig.Name
 	zoneFolder.Parent = zonesFolder
 
-	addFloorSegment(zoneConfig, zoneFolder, zoneConfig.Origin.Z, zoneConfig.RoomSize.Z)
+	addFloorSegment(zoneConfig, zoneFolder, 0, zoneConfig.RoomSize.Z)
 	buildWallsAndCeiling(zoneConfig, zoneFolder)
-	buildWeightedOrePool(zoneConfig, zoneFolder, zoneConfig.Origin, zoneConfig.RoomSize.Z, zoneConfig.Name)
+	buildWeightedOrePool(zoneConfig, zoneFolder, 0, zoneConfig.RoomSize.Z, zoneConfig.Name)
+	buildZoneSign(zoneConfig, zoneFolder)
 end
 
 -- === Dark Mines: entrance (safe ore) -> lava + jump platforms -> treasure ===
@@ -320,10 +373,10 @@ local function buildDarkMines(zoneConfig, zonesFolder)
 	-- Entrance floor only -- no floor under the lava gap (see
 	-- addFloorSegment's comment), and the treasure platform built below
 	-- doubles as the floor for the far end.
-	addFloorSegment(zoneConfig, zoneFolder, origin.Z, DARK_MINES_ENTRANCE_DEPTH)
+	addFloorSegment(zoneConfig, zoneFolder, 0, DARK_MINES_ENTRANCE_DEPTH)
 
 	-- Safe entrance ore
-	buildWeightedOrePool(zoneConfig, zoneFolder, origin, DARK_MINES_ENTRANCE_DEPTH, zoneConfig.Name .. "_Entrance")
+	buildWeightedOrePool(zoneConfig, zoneFolder, 0, DARK_MINES_ENTRANCE_DEPTH, zoneConfig.Name .. "_Entrance")
 
 	local entranceCheckpointCFrame = CFrame.new(origin.X, origin.Y + 2, origin.Z + DARK_MINES_ENTRANCE_DEPTH - 4)
 	addCheckpoint(zoneFolder, entranceCheckpointCFrame, Vector3.new(size.X - 4, 1, 4), 1)
@@ -397,6 +450,7 @@ local function buildDarkMines(zoneConfig, zonesFolder)
 	end)
 
 	setupCheckpoints(zoneFolder)
+	buildZoneSign(zoneConfig, zoneFolder)
 end
 
 -- === Zone bootstrap ===

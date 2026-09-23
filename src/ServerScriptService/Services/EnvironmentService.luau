@@ -1,13 +1,16 @@
 -- Removes Studio's default "Baseplate" (the flat grey sandbox floor that
 -- otherwise extends infinitely past the built zones) and replaces it with a
 -- themed, finite ground fill covering the gaps between zones -- computed
--- from Config.Zones geometry so it stays correct if zones move.
+-- from Config.Zones geometry (via ZoneGeometry, so it's orientation-aware)
+-- so it stays correct if zones move or change sides.
 --
--- Deliberately builds this as several rectangular strips around the known
--- zone footprints, rather than one big slab under everything: a single slab
--- would sit right under Dark Mines' lava pit (which has no floor there on
--- purpose, see MiningService) and silently "catch" players who fall in,
--- breaking that feature.
+-- Deliberately builds this via rectangle-grid decomposition (collect every
+-- zone's X/Z edges, sort them into a grid, fill any cell whose center isn't
+-- inside a zone's footprint) rather than one big slab under everything: a
+-- single slab would sit right under Dark Mines' lava pit (which has no
+-- floor there on purpose, see MiningService) and silently "catch" players
+-- who fall in, breaking that feature. This approach is correct for any
+-- axis-aligned zone arrangement, not just the current hub-and-spoke one.
 --
 -- Also adds light distance fog so the ground fill's own edges (finite, ~80
 -- studs past the outermost zone) fade into haze instead of ending abruptly.
@@ -16,6 +19,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage:WaitForChild("Config"))
+local ZoneGeometry = require(ReplicatedStorage:WaitForChild("ZoneGeometry"))
 
 local MARGIN = 80
 local GROUND_MATERIAL = Enum.Material.Ground
@@ -50,49 +54,53 @@ local function buildGroundFill()
 	groundFolder.Name = "GroundFill"
 	groundFolder.Parent = Workspace
 
-	local hubConfig = Config.Zones[1]
-	local hubLeft = hubConfig.Origin.X - hubConfig.RoomSize.X / 2
-	local hubRight = hubConfig.Origin.X + hubConfig.RoomSize.X / 2
-	local hubFrontZ = hubConfig.Origin.Z
-	local hubBackZ = hubConfig.Origin.Z + hubConfig.RoomSize.Z
+	local rects = {}
+	local overallMinX, overallMaxX = math.huge, -math.huge
+	local overallMinZ, overallMaxZ = math.huge, -math.huge
 
-	local spokeEdges = {}
-	local overallLeft, overallRight = hubLeft, hubRight
-	local maxSpokeZ = hubBackZ
-
-	for i = 2, #Config.Zones do
-		local zoneConfig = Config.Zones[i]
-		local left = zoneConfig.Origin.X - zoneConfig.RoomSize.X / 2
-		local right = zoneConfig.Origin.X + zoneConfig.RoomSize.X / 2
-		table.insert(spokeEdges, { left = left, right = right })
-		overallLeft = math.min(overallLeft, left)
-		overallRight = math.max(overallRight, right)
-		maxSpokeZ = math.max(maxSpokeZ, zoneConfig.Origin.Z + zoneConfig.RoomSize.Z)
+	for _, zoneConfig in Config.Zones do
+		local bounds = ZoneGeometry.bounds(zoneConfig)
+		table.insert(rects, bounds)
+		overallMinX = math.min(overallMinX, bounds.minX)
+		overallMaxX = math.max(overallMaxX, bounds.maxX)
+		overallMinZ = math.min(overallMinZ, bounds.minZ)
+		overallMaxZ = math.max(overallMaxZ, bounds.maxZ)
 	end
-	table.sort(spokeEdges, function(a, b)
-		return a.left < b.left
-	end)
 
-	-- Around the hub: south margin (spawn side), west margin, east margin.
-	-- Never touches the hub's own X range, so it can't overlap its floor.
-	addGroundStrip(groundFolder, overallLeft - MARGIN, overallRight + MARGIN, hubFrontZ - MARGIN, hubFrontZ)
-	addGroundStrip(groundFolder, overallLeft - MARGIN, hubLeft, hubFrontZ, hubBackZ)
-	addGroundStrip(groundFolder, hubRight, overallRight + MARGIN, hubFrontZ, hubBackZ)
+	-- Every distinct X/Z edge across all zone rectangles, plus the outer
+	-- margin, sorted -- these divide the plane into a grid of cells that
+	-- each either lie fully inside one zone's rectangle or fully outside
+	-- all of them (never straddling an edge).
+	local xEdges, zEdges = { overallMinX - MARGIN, overallMaxX + MARGIN }, { overallMinZ - MARGIN, overallMaxZ + MARGIN }
+	for _, rect in rects do
+		table.insert(xEdges, rect.minX)
+		table.insert(xEdges, rect.maxX)
+		table.insert(zEdges, rect.minZ)
+		table.insert(zEdges, rect.maxZ)
+	end
+	table.sort(xEdges)
+	table.sort(zEdges)
 
-	-- Between/around the spoke zones, sorted left to right. Each strip sits
-	-- strictly between two zones' edges (or a zone's edge and the margin),
-	-- so it never overlaps any zone's own footprint -- including Dark
-	-- Mines', which is what keeps its lava pit un-floored.
-	if #spokeEdges > 0 then
-		addGroundStrip(groundFolder, overallLeft - MARGIN, spokeEdges[1].left, hubBackZ, maxSpokeZ + MARGIN)
-		for i = 1, #spokeEdges - 1 do
-			addGroundStrip(groundFolder, spokeEdges[i].right, spokeEdges[i + 1].left, hubBackZ, maxSpokeZ + MARGIN)
+	local function isInsideAnyZone(x, z)
+		for _, rect in rects do
+			if x > rect.minX and x < rect.maxX and z > rect.minZ and z < rect.maxZ then
+				return true
+			end
 		end
-		addGroundStrip(groundFolder, spokeEdges[#spokeEdges].right, overallRight + MARGIN, hubBackZ, maxSpokeZ + MARGIN)
+		return false
 	end
 
-	-- Far margin beyond the deepest zone.
-	addGroundStrip(groundFolder, overallLeft - MARGIN, overallRight + MARGIN, maxSpokeZ, maxSpokeZ + MARGIN)
+	for i = 1, #xEdges - 1 do
+		local x1, x2 = xEdges[i], xEdges[i + 1]
+		if x2 > x1 then
+			for j = 1, #zEdges - 1 do
+				local z1, z2 = zEdges[j], zEdges[j + 1]
+				if z2 > z1 and not isInsideAnyZone((x1 + x2) / 2, (z1 + z2) / 2) then
+					addGroundStrip(groundFolder, x1, x2, z1, z2)
+				end
+			end
+		end
+	end
 end
 
 local function setupAtmosphere()
