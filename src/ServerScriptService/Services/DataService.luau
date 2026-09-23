@@ -30,6 +30,26 @@ local function storeKey(player)
 	return "Player_" .. player.UserId
 end
 
+-- Retries a DataStore call a few times with backoff before giving up.
+-- Roblox DataStore calls can fail transiently (throttling, brief outages);
+-- without this, a single hiccup on load would look identical to "no saved
+-- data" and silently hand the player a fresh profile, which then gets
+-- saved over their real progress.
+local function retryAsync(fn, attempts)
+	local lastError
+	for attempt = 1, attempts do
+		local ok, result = pcall(fn)
+		if ok then
+			return true, result
+		end
+		lastError = result
+		if attempt < attempts then
+			task.wait(attempt) -- 1s, 2s, ...
+		end
+	end
+	return false, lastError
+end
+
 local function setupLeaderstats(player, profile)
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
@@ -130,28 +150,29 @@ function DataService.Save(player)
 	if not profile then
 		return
 	end
-	local ok, err = pcall(function()
+	local ok, err = retryAsync(function()
 		playerStore:SetAsync(storeKey(player), profile)
-	end)
+	end, 3)
 	if not ok then
-		warn(("DataService: failed to save data for %s: %s"):format(player.Name, tostring(err)))
+		warn(("DataService: failed to save data for %s after retries: %s"):format(player.Name, tostring(err)))
 	end
 end
 
 local function loadProfile(player)
-	local ok, result = pcall(function()
+	local ok, result = retryAsync(function()
 		return playerStore:GetAsync(storeKey(player))
-	end)
+	end, 3)
 
-	local profile
-	if ok and result then
-		profile = result
-	else
-		if not ok then
-			warn(("DataService: failed to load data for %s: %s"):format(player.Name, tostring(result)))
-		end
-		profile = defaultProfile()
+	if not ok then
+		-- Don't hand out a fresh profile on a load failure -- that would
+		-- get saved over the player's real progress. Kick instead so they
+		-- can rejoin and try again rather than silently losing progress.
+		warn(("DataService: failed to load data for %s after retries: %s"):format(player.Name, tostring(result)))
+		player:Kick("Couldn't load your save data. Please rejoin in a moment -- sorry about that!")
+		return
 	end
+
+	local profile = result or defaultProfile()
 
 	if Config.IsAdmin(player.UserId) then
 		profile.PickaxeTier = #Config.PickaxeTiers
