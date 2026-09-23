@@ -223,8 +223,8 @@ Config.CashProducts = {
 -- Pack bulk-discount shape). GemShopUi only renders entries that have a
 -- ProductId set, same pattern as Config.JumpscareProductId below.
 Config.GemProducts = {
-	-- { ProductId = 0, Name = "Gem Pouch", Gems = 100 },
-	-- { ProductId = 0, Name = "Gem Hoard", Gems = 500 },
+	{ ProductId = 3714385564, Name = "Gem Pouch", Gems = 100 },
+	{ ProductId = 3714385698, Name = "Gem Hoard", Gems = 500 },
 }
 
 -- Dark Mines "Jumpscare Prank" developer product.
