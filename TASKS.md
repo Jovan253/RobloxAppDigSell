@@ -170,8 +170,8 @@ User feedback: discovering an ore type should stay automatic (mining marks it fo
 - [x] `DataService`: `SpeedTier` field on the profile (default 1, migration for pre-existing saves), mirrored to `PlayerData.SpeedTier`, `SetSpeedTier`; admin override now also maxes `SpeedTier`
 - [x] New `SpeedBoostService` (server) — reacts to `PlayerData.SpeedTier` changes + `CharacterAdded` to apply `Humanoid.WalkSpeed`, same reactive pattern as `PickaxeToolService`
 - [x] `ShopService`/`Remotes`: new `PurchaseSpeedTier` remote, validated in-order + against Gems balance (not Cash)
-- [x] `ShopUi.client.luau`: new "Speed Boost (Gems)" section between Zones and Rebirth
-- [ ] Not yet playtested live
+- [x] Playtest live — confirmed working
+- [x] User feedback: wanted Gems purchases in a separate shop from Cash purchases, not mixed into one panel — moved Speed Boost out of `ShopUi.client.luau` into a new `GemShopUi.client.luau` ("Gem Shop" button / "G" key, cyan-themed to match the Gems HUD readout), stacked below the Journal button
 
 ### Stage 2b (next round): case-opening cosmetic skin system
 - [ ] Not started — cases cost Gems, horizontal-spin reveal animation, weighted-rarity pickaxe skins, rarer skins get a particle effect attached (not just a recolor). Explicit gacha/case mechanic, not a direct-purchase shop, per user's correction.

@@ -20,8 +20,6 @@ local playerData = player:WaitForChild("PlayerData")
 local pickaxeTierValue = playerData:WaitForChild("PickaxeTier")
 local unlockedZonesValue = playerData:WaitForChild("UnlockedZones")
 local ownsDoubleCashValue = playerData:WaitForChild("OwnsDoubleCash")
-local gemsValue = playerData:WaitForChild("Gems")
-local speedTierValue = playerData:WaitForChild("SpeedTier")
 
 local OWNED_COLOR = Color3.fromRGB(60, 60, 60)
 local AFFORDABLE_COLOR = Color3.fromRGB(35, 120, 60)
@@ -193,17 +191,6 @@ for i, zoneConfig in Config.Zones do
 	zoneRows[zoneConfig.Name] = { label = label, button = button, config = zoneConfig }
 end
 
-addSectionHeader("Speed Boost (Gems)", 150)
-
-local speedRows = {}
-for index, tier in Config.SpeedTiers do
-	local label, button = addRow(150 + index)
-	button.MouseButton1Click:Connect(function()
-		Remotes.PurchaseSpeedTier:FireServer(index)
-	end)
-	speedRows[index] = { label = label, button = button, tier = tier }
-end
-
 addSectionHeader("Rebirth", 200)
 local rebirthLabel, rebirthButton = addRow(201)
 
@@ -300,9 +287,7 @@ ownsDoubleCashValue:GetPropertyChangedSignal("Value"):Connect(updateStoreSection
 
 local function refresh()
 	local cash = cashValue.Value
-	local gems = gemsValue.Value
 	local currentTier = pickaxeTierValue.Value
-	local currentSpeedTier = speedTierValue.Value
 	local unlocked = getUnlockedZones()
 
 	for index, entry in pickaxeRows do
@@ -317,26 +302,6 @@ local function refresh()
 			button.Text = tostring(tier.Cost)
 			button.Active = true
 			button.BackgroundColor3 = cash >= tier.Cost and AFFORDABLE_COLOR or UNAFFORDABLE_COLOR
-		else
-			label.Text = ("%s -- locked"):format(tier.Name)
-			button.Text = "Locked"
-			button.Active = false
-			button.BackgroundColor3 = OWNED_COLOR
-		end
-	end
-
-	for index, entry in speedRows do
-		local tier, label, button = entry.tier, entry.label, entry.button
-		if index <= currentSpeedTier then
-			label.Text = ("%s -- %d WalkSpeed (owned)"):format(tier.Name, tier.WalkSpeed)
-			button.Text = "Owned"
-			button.Active = false
-			button.BackgroundColor3 = OWNED_COLOR
-		elseif index == currentSpeedTier + 1 then
-			label.Text = ("%s -- %d WalkSpeed"):format(tier.Name, tier.WalkSpeed)
-			button.Text = tostring(tier.Cost)
-			button.Active = true
-			button.BackgroundColor3 = gems >= tier.Cost and AFFORDABLE_COLOR or UNAFFORDABLE_COLOR
 		else
 			label.Text = ("%s -- locked"):format(tier.Name)
 			button.Text = "Locked"
@@ -365,9 +330,7 @@ local function refresh()
 end
 
 cashValue:GetPropertyChangedSignal("Value"):Connect(refresh)
-gemsValue:GetPropertyChangedSignal("Value"):Connect(refresh)
 pickaxeTierValue:GetPropertyChangedSignal("Value"):Connect(refresh)
-speedTierValue:GetPropertyChangedSignal("Value"):Connect(refresh)
 unlockedZonesValue:GetPropertyChangedSignal("Value"):Connect(refresh)
 rebirthsValue:GetPropertyChangedSignal("Value"):Connect(refresh)
 refresh()
