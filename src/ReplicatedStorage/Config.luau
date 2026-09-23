@@ -3,8 +3,13 @@ local Config = {}
 -- Each zone is a room MiningService builds procedurally (see its comments
 -- for the room-shell/scatter algorithm). `Origin` is (center X, floor Y,
 -- near-Z edge) -- the room extends from Origin.Z to Origin.Z + RoomSize.Z,
--- and from Origin.X - RoomSize.X/2 to Origin.X + RoomSize.X/2. Zones are
--- spaced along Z with gaps so their rooms don't intersect.
+-- and from Origin.X - RoomSize.X/2 to Origin.X + RoomSize.X/2.
+--
+-- Layout is hub-and-spoke: Zone1 is a wide-open central hub (no walls), and
+-- Zone2/3/4 sit side by side along its north edge (Origin.Z = 80 for all
+-- three), each its own lane on the X axis with gaps so their walls don't
+-- intersect. All three are reachable directly from the hub -- you don't
+-- walk through one zone to reach another.
 --
 -- `OreTypes` entries are picked per ore node by weighted random (Weight is
 -- relative, doesn't need to sum to 100). `Multiplier` scales the zone's base
@@ -14,17 +19,17 @@ Config.Zones = {
 	{
 		Name = "Zone1",
 		DisplayName = "Sunny Quarry",
-		UnlockCost = 0, -- starter zone, free
+		UnlockCost = 0, -- starter zone / hub, free and always open
 		OreValue = 1,
 		RespawnTime = 3,
 		Origin = Vector3.new(0, 1, 0),
-		RoomSize = Vector3.new(90, 1, 90),
-		Enclosed = false, -- open-air surface quarry, no walls/ceiling
+		RoomSize = Vector3.new(160, 1, 80),
+		Enclosed = false, -- open-air hub, no walls/ceiling
 		GroundMaterial = Enum.Material.Grass,
 		GroundColor = Color3.fromRGB(94, 155, 76),
 		WallMaterial = Enum.Material.Rock,
 		WallColor = Color3.fromRGB(150, 140, 120),
-		OreCount = 26,
+		OreCount = 30,
 		OreTypes = {
 			{ Name = "Sandstone", Material = Enum.Material.Sandstone, Color = Color3.fromRGB(214, 187, 129), Multiplier = 1, Weight = 85, Glow = false },
 			{ Name = "Quartz", Material = Enum.Material.Glass, Color = Color3.fromRGB(240, 240, 250), Multiplier = 5, Weight = 15, Glow = true },
@@ -36,7 +41,7 @@ Config.Zones = {
 		UnlockCost = 500,
 		OreValue = 5,
 		RespawnTime = 4,
-		Origin = Vector3.new(0, 1, 150),
+		Origin = Vector3.new(-130, 1, 80),
 		RoomSize = Vector3.new(100, 36, 100),
 		Enclosed = true,
 		GroundMaterial = Enum.Material.Slate,
@@ -55,7 +60,7 @@ Config.Zones = {
 		UnlockCost = 5000,
 		OreValue = 25,
 		RespawnTime = 5,
-		Origin = Vector3.new(0, 1, 320),
+		Origin = Vector3.new(0, 1, 80),
 		RoomSize = Vector3.new(110, 40, 110),
 		Enclosed = true,
 		GroundMaterial = Enum.Material.Basalt,
@@ -74,7 +79,7 @@ Config.Zones = {
 		UnlockCost = 25000,
 		OreValue = 80,
 		RespawnTime = 6,
-		Origin = Vector3.new(0, 1, 500),
+		Origin = Vector3.new(140, 1, 80),
 		-- Z = ENTRANCE_DEPTH + LAVA_DEPTH + TREASURE_DEPTH from
 		-- MiningService's Dark Mines layout constants (40 + 70 + 50 = 160).
 		-- Keep these in sync if either changes.

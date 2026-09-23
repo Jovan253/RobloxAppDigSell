@@ -33,6 +33,13 @@ local MiningService = {}
 local lastCheckpoint = {} -- [player] = { CFrame, Order }
 local teleportCooldown = {} -- [player] = true while cooling down after a lava hit
 
+-- Each "pool" is a fixed set of possible ore spawn slots within a zone (or
+-- part of one, e.g. Dark Mines' entrance vs its treasure platform). Mining a
+-- node destroys it outright and, after RespawnTime, a new one spawns at a
+-- random slot from its pool -- not necessarily the same spot -- so ore
+-- positions drift around instead of the same rock just reappearing in place.
+local orePools = {} -- [poolId] = { folder, zoneName, respawnTime, positions, spawnPick }
+
 -- === Ore node creation (shared by standard-zone scatter and Dark Mines) ===
 
 local function pickOreType(oreTypes)
@@ -52,7 +59,7 @@ local function pickOreType(oreTypes)
 	return oreTypes[#oreTypes]
 end
 
-local function createOreNode(oreType, cashValue, zoneName, respawnTime, position)
+local function createOreNode(oreType, cashValue, zoneName, respawnTime, position, poolId)
 	local model = Instance.new("Model")
 	model.Name = "OreNode"
 
@@ -94,22 +101,50 @@ local function createOreNode(oreType, cashValue, zoneName, respawnTime, position
 	model:SetAttribute("RespawnTime", respawnTime)
 	model:SetAttribute("ZoneName", zoneName)
 	model:SetAttribute("OreTypeName", oreType.Name)
+	model:SetAttribute("PoolId", poolId)
 
 	CollectionService:AddTag(model, ORE_TAG)
 
 	return model
 end
 
--- Jittered-grid scatter: divides the usable floor area into a roughly
--- OreCount-sized grid and places one ore per cell with random jitter, so
--- coverage is even without needing true collision-based placement.
-local function scatterOres(zoneConfig, zoneFolder, areaOrigin, areaDepth)
+local function spawnOreAt(poolId, position)
+	local pool = orePools[poolId]
+	if not pool then
+		return
+	end
+
+	local oreType, cashValue = pool.spawnPick()
+	local node = createOreNode(oreType, cashValue, pool.zoneName, pool.respawnTime, position, poolId)
+	node.Parent = pool.folder
+end
+
+local function registerOrePool(zoneFolder, zoneName, respawnTime, positions, poolId, spawnPick)
+	orePools[poolId] = {
+		folder = zoneFolder,
+		zoneName = zoneName,
+		respawnTime = respawnTime,
+		positions = positions,
+		spawnPick = spawnPick,
+	}
+
+	for _, position in positions do
+		spawnOreAt(poolId, position)
+	end
+end
+
+-- Jittered-grid slots: divides the usable floor area into a roughly
+-- OreCount-sized grid and returns one slot position per cell with random
+-- jitter, so coverage is even without needing true collision-based
+-- placement.
+local function computeGridSlots(zoneConfig, areaOrigin, areaDepth)
 	local size = zoneConfig.RoomSize
 	local margin = 8
 	local usableX = size.X - margin * 2
 	local usableZ = areaDepth - margin * 2
+	local positions = {}
 	if usableX <= 0 or usableZ <= 0 then
-		return
+		return positions
 	end
 
 	local cols = math.max(1, math.floor(math.sqrt(zoneConfig.OreCount * usableX / usableZ)))
@@ -117,10 +152,9 @@ local function scatterOres(zoneConfig, zoneFolder, areaOrigin, areaDepth)
 	local cellX = usableX / cols
 	local cellZ = usableZ / rows
 
-	local placed = 0
 	for row = 0, rows - 1 do
 		for col = 0, cols - 1 do
-			if placed >= zoneConfig.OreCount then
+			if #positions >= zoneConfig.OreCount then
 				break
 			end
 
@@ -128,16 +162,19 @@ local function scatterOres(zoneConfig, zoneFolder, areaOrigin, areaDepth)
 			local baseZ = areaOrigin.Z + margin + cellZ * (row + 0.5)
 			local jitterX = (math.random() - 0.5) * cellX * 0.6
 			local jitterZ = (math.random() - 0.5) * cellZ * 0.6
-			local position = Vector3.new(baseX + jitterX, areaOrigin.Y, baseZ + jitterZ)
-
-			local oreType = pickOreType(zoneConfig.OreTypes)
-			local cashValue = zoneConfig.OreValue * oreType.Multiplier
-			local node = createOreNode(oreType, cashValue, zoneConfig.Name, zoneConfig.RespawnTime, position)
-			node.Parent = zoneFolder
-
-			placed += 1
+			table.insert(positions, Vector3.new(baseX + jitterX, areaOrigin.Y, baseZ + jitterZ))
 		end
 	end
+
+	return positions
+end
+
+local function buildWeightedOrePool(zoneConfig, zoneFolder, areaOrigin, areaDepth, poolId)
+	local positions = computeGridSlots(zoneConfig, areaOrigin, areaDepth)
+	registerOrePool(zoneFolder, zoneConfig.Name, zoneConfig.RespawnTime, positions, poolId, function()
+		local oreType = pickOreType(zoneConfig.OreTypes)
+		return oreType, zoneConfig.OreValue * oreType.Multiplier
+	end)
 end
 
 -- === Room shell (floor segments + walls/ceiling for enclosed zones) ===
@@ -203,7 +240,7 @@ local function buildStandardZone(zoneConfig, zonesFolder)
 
 	addFloorSegment(zoneConfig, zoneFolder, zoneConfig.Origin.Z, zoneConfig.RoomSize.Z)
 	buildWallsAndCeiling(zoneConfig, zoneFolder)
-	scatterOres(zoneConfig, zoneFolder, zoneConfig.Origin, zoneConfig.RoomSize.Z)
+	buildWeightedOrePool(zoneConfig, zoneFolder, zoneConfig.Origin, zoneConfig.RoomSize.Z, zoneConfig.Name)
 end
 
 -- === Dark Mines: entrance (safe ore) -> lava + jump platforms -> treasure ===
@@ -286,7 +323,7 @@ local function buildDarkMines(zoneConfig, zonesFolder)
 	addFloorSegment(zoneConfig, zoneFolder, origin.Z, DARK_MINES_ENTRANCE_DEPTH)
 
 	-- Safe entrance ore
-	scatterOres(zoneConfig, zoneFolder, origin, DARK_MINES_ENTRANCE_DEPTH)
+	buildWeightedOrePool(zoneConfig, zoneFolder, origin, DARK_MINES_ENTRANCE_DEPTH, zoneConfig.Name .. "_Entrance")
 
 	local entranceCheckpointCFrame = CFrame.new(origin.X, origin.Y + 2, origin.Z + DARK_MINES_ENTRANCE_DEPTH - 4)
 	addCheckpoint(zoneFolder, entranceCheckpointCFrame, Vector3.new(size.X - 4, 1, 4), 1)
@@ -349,13 +386,15 @@ local function buildDarkMines(zoneConfig, zonesFolder)
 	local treasureCheckpointCFrame = CFrame.new(origin.X, origin.Y + 2, treasureZ - DARK_MINES_TREASURE_DEPTH / 2 + 3)
 	addCheckpoint(zoneFolder, treasureCheckpointCFrame, Vector3.new(size.X - 10, 3, 4), 3)
 
+	local treasurePositions = {}
 	for _ = 1, zoneConfig.RareOreCount do
 		local px = origin.X + (math.random() - 0.5) * (size.X - 16)
 		local pz = treasureZ + (math.random() - 0.5) * (DARK_MINES_TREASURE_DEPTH - 8)
-		local cashValue = zoneConfig.OreValue * zoneConfig.RareOreType.Multiplier
-		local node = createOreNode(zoneConfig.RareOreType, cashValue, zoneConfig.Name, zoneConfig.RespawnTime, Vector3.new(px, origin.Y, pz))
-		node.Parent = zoneFolder
+		table.insert(treasurePositions, Vector3.new(px, origin.Y, pz))
 	end
+	registerOrePool(zoneFolder, zoneConfig.Name, zoneConfig.RespawnTime, treasurePositions, zoneConfig.Name .. "_Treasure", function()
+		return zoneConfig.RareOreType, zoneConfig.OreValue * zoneConfig.RareOreType.Multiplier
+	end)
 
 	setupCheckpoints(zoneFolder)
 end
@@ -409,34 +448,20 @@ local function rebirthMultiplier(player)
 	return profile and profile.RebirthMultiplier or 1
 end
 
-local function setNodeVisible(node, visible)
-	for _, descendant in node:GetDescendants() do
-		if descendant:IsA("BasePart") then
-			descendant.Transparency = visible and 0 or 0.85
-			descendant.CanCollide = visible
-		elseif descendant:IsA("PointLight") then
-			descendant.Enabled = visible
-		end
-	end
-
-	local rock = node:FindFirstChild("Rock")
-	local click = rock and rock:FindFirstChildOfClass("ClickDetector")
-	if click then
-		click.MaxActivationDistance = visible and 15 or 0
-	end
-end
-
 local function onNodeClicked(node, player)
 	if node:GetAttribute("Mining") then
+		-- Debounce: without this, two MouseClick firings that both start
+		-- before the first one's Destroy() below takes effect could grant
+		-- the reward twice.
 		return
 	end
+	node:SetAttribute("Mining", true)
 
 	local zoneName = node:GetAttribute("ZoneName")
 	if not isZoneUnlocked(player, zoneName) then
+		node:SetAttribute("Mining", false)
 		return
 	end
-
-	node:SetAttribute("Mining", true)
 
 	local baseValue = node:GetAttribute("CashValue") or 1
 	local reward = baseValue
@@ -445,14 +470,16 @@ local function onNodeClicked(node, player)
 		* MarketplaceService.GetCashMultiplier(player)
 	DataService.AddCash(player, reward)
 
-	setNodeVisible(node, false)
+	local poolId = node:GetAttribute("PoolId")
+	local respawnTime = node:GetAttribute("RespawnTime") or 3
+	node:Destroy()
 
-	task.delay(node:GetAttribute("RespawnTime") or 3, function()
-		if not node.Parent then
+	task.delay(respawnTime, function()
+		local pool = orePools[poolId]
+		if not pool or #pool.positions == 0 then
 			return
 		end
-		setNodeVisible(node, true)
-		node:SetAttribute("Mining", false)
+		spawnOreAt(poolId, pool.positions[math.random(1, #pool.positions)])
 	end)
 end
 
