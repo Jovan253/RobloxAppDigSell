@@ -3,6 +3,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local ContentProvider = game:GetService("ContentProvider")
 
 local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 
@@ -18,7 +19,7 @@ screenGui.Parent = playerGui
 local flash = Instance.new("Frame")
 flash.Name = "Flash"
 flash.Size = UDim2.new(1, 0, 1, 0)
-flash.BackgroundColor3 = Color3.fromRGB(140, 0, 0)
+flash.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 flash.BackgroundTransparency = 1
 flash.Visible = false
 flash.Parent = screenGui
@@ -29,16 +30,29 @@ sound.SoundId = "rbxassetid://139162107746216"
 sound.Volume = 1
 sound.Parent = screenGui
 
+-- Preload so sound.TimeLength is actually populated by the time the effect
+-- fires -- it reads as 0 until the asset has loaded at least once.
+task.spawn(function()
+	ContentProvider:PreloadAsync({ sound })
+end)
+
+local FALLBACK_DURATION = 1.5 -- used only if TimeLength isn't available yet
+local activeFade = nil
+
 Remotes.JumpscareEffect.OnClientEvent:Connect(function()
-	flash.BackgroundTransparency = 0
-	flash.Visible = true
-	if sound.SoundId ~= "" then
-		sound:Play()
+	if activeFade then
+		activeFade:Cancel()
 	end
 
-	local fadeOut = TweenService:Create(flash, TweenInfo.new(0.6, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 })
-	fadeOut:Play()
-	fadeOut.Completed:Connect(function()
+	flash.BackgroundTransparency = 0
+	flash.Visible = true
+	sound:Play()
+
+	local duration = sound.TimeLength > 0 and sound.TimeLength or FALLBACK_DURATION
+
+	activeFade = TweenService:Create(flash, TweenInfo.new(duration, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 })
+	activeFade:Play()
+	activeFade.Completed:Connect(function()
 		flash.Visible = false
 	end)
 end)
