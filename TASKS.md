@@ -16,7 +16,7 @@ Live checklist for the MVP. Full rationale/design doc: `plans/2026-09-21-mvp-roa
 - [x] 7. Leaderboard — `LeaderboardService` (OrderedDataStore, all-time, updates every 30s) + `LeaderboardUi.client.luau` panel ("Ranks" button / "L" key)
 - [x] 8. Monetization — 2x Cash gamepass (1988462502) + Cash Pack developer products (Small 3714204369/5000, Huge 3714204408/50000), `MarketplaceService` + shop "Store" section
 - [x] 9. Polish — map/ore/Dark Mines overhaul complete across 5 follow-up rounds, all confirmed live (see "Polish: map & Dark Mines" and "Follow-up round 2-5" below); further polish ideas (Gem system, Wheel Spin, Auto-Mine) deferred to "Future ideas"
-- [ ] 10. Playtest, bugfix, thumbnail/icon, store page copy, soft launch
+- [x] 10. Launch prep — bugfix pass done, store copy drafted, launch checklist given, **published live** (2026-09-23). Icon/thumbnail upload still on the user (needs real screenshots I can't take myself).
 
 ## Polish: map & Dark Mines (decided 2026-09-22)
 
@@ -69,10 +69,34 @@ User feedback: barrier text confirmed working (asked for it in round 3), grey vo
 
 - [x] Admin account system — `Config.AdminUserIds`/`Config.IsAdmin`; on join, admins get all zones unlocked, max pickaxe tier, and the 2x Cash multiplier applied for free (doesn't cover Robux purchases — those still need real payment). Activated for UserId 2323949512.
 - [x] Playtest live in Studio — confirmed working (2026-09-23). To test as a normal player, just ask to temporarily comment out the UserId in `Config.AdminUserIds` (one-line toggle, no in-game UI needed for this)
+- [x] Disabled admin for normal-player testing per request (commit `f5b4867`) — re-enable by uncommenting the UserId in `Config.AdminUserIds`
+
+## Launch prep (2026-09-23)
+
+- [x] Bugfix pass — found and fixed a real data-loss risk: DataStore load failures (including transient ones) were silently treated as "new player," which would then save over real progress. Added retries + kick-instead-of-reset-on-failure (commit `1510f9b`)
+- [x] Store page copy drafted (name + description) — see conversation; not yet pasted into the Dashboard by the user
+- [x] Icon/thumbnail specs + guidance given (512x512 icon, 1920x1080 thumbnails) — actual images need to come from the user, can't generate/screenshot them myself
+- [x] Launch checklist given (dashboard fields, Access setting, final playtest, invite testers)
+- [x] **Published live to Roblox** (2026-09-23) — first time the actual live/public place matched what's been tested via Rojo live-sync this whole time
+
+## Follow-up round 7 (2026-09-23) — post-launch feedback
+
+User feedback after playing the live version: multiplayer server sizing, wanting all 4 hub sides used, more ore quantity, a request to assess pacing/motivation, a future reskin idea, and equipping an actual pickaxe with a swing + multi-hit mining.
+
+- [x] Balance assessment — computed real numbers from Config: ~60 clicks to first pickaxe upgrade (healthy), ~500x expected-value range from Zone1/tier1 to Zone3/tier5+luck (normal exponential curve for the genre). Flagged real risk: one-click-destroy mining with only 10-30 ore slots per zone means multiplayer contention could stall players waiting for respawns, and there was no physical feedback per click beyond the number changing.
+- [x] Server size recommendation — cap Max Player Count in Game Settings (Basic Info) to roughly 20-30; this is a solo-optimization simulator, not a game that benefits from huge crowded servers. **User action needed**: set this in the Dashboard/Studio, no code involved.
+- [x] Ore count increase — Zone1/3: 30→50, Zone2: 28→45, Dark Mines entrance: 10→16, Dark Mines treasure: 6→10 (commit `90d8a76`)
+- [x] Pickaxe tool + swing + multi-hit mining — see design decision below
+- [ ] Playtest the pickaxe tool/swing/multi-hit live — not tested yet, and tool proportions/grip offset/swing angles are a first pass that will likely need visual tuning
+- [ ] 4th zone ("Sky Ruins", South side, floating-platform parkour over a bottomless drop) — **not started**, queued as the next round so it doesn't get rushed bundled with the pickaxe rework. Needs spawn moved to hub center since South won't be open anymore.
+
+**Design decision — multi-hit mining:** hits-required now scales with pickaxe tier (fewer hits = better pickaxe), not just cash-per-hit. Wooden/Stone = 3 hits, Iron/Gold = 2, Diamond = 1, uniform across all ore types/zones (`Config.OreMaxHealth` + each tier's `Damage`). Mining validation is unchanged (still server-side via ClickDetector) — this only adds a Health counter on top.
 
 ## Future ideas (not in MVP scope)
 
 - Auto-Mine gamepass — periodically auto-mines the nearest unlocked ore without clicking, for players who own it
+- Reskin the ore/mining assets to make a different game later (noted 2026-09-23, no action needed now)
+- Frozen Caverns (ice/slippery-movement zone) and Flooded Depths (underwater/breath-limited zone) — alternate 4th/5th zone concepts the user liked alongside Sky Ruins; Sky Ruins was picked for the next round, these could follow later
 - Gem system (agreed 2026-09-23, not built) — secondary currency, deliberately kept separate from what Cash already buys:
   - Earn: primarily from mining **rare** ore types (the glowing ones — Quartz/Emerald/Diamond/Cursed Ruby), plus a small passive playtime trickle, plus a Gem Pack developer product for direct purchase
   - Spend: permanent Speed Boost tiers (WalkSpeed, like Pickaxe tiers but for movement); Pets (flagged as a bigger feature on its own — following AI, rarity table, equip/inventory UI — not a quick add)
