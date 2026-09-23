@@ -5,7 +5,7 @@
 -- avoids keeping two sources of truth in sync.
 local RunService = game:GetService("RunService")
 
-local REMOTE_NAMES = { "PurchaseUpgrade", "PurchaseZone", "Rebirth", "ZoneNotice", "JumpscareEffect", "MineHit", "ClaimOreReward" }
+local REMOTE_NAMES = { "PurchaseUpgrade", "PurchaseZone", "Rebirth", "ZoneNotice", "JumpscareEffect", "MineHit", "ClaimOreReward", "PurchaseSpeedTier" }
 
 local remotesFolder
 

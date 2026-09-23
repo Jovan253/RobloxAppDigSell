@@ -34,6 +34,30 @@ local function purchasePickaxe(player, tierIndex)
 	DataService.SetPickaxeTier(player, tierIndex)
 end
 
+local function purchaseSpeedTier(player, tierIndex)
+	local profile = DataService.GetProfile(player)
+	if not profile then
+		return
+	end
+
+	local tier = Config.SpeedTiers[tierIndex]
+	if not tier then
+		return
+	end
+
+	-- Tiers must be bought in order, same as pickaxe tiers.
+	if tierIndex ~= profile.SpeedTier + 1 then
+		return
+	end
+
+	if profile.Gems < tier.Cost then
+		return
+	end
+
+	DataService.SetGems(player, profile.Gems - tier.Cost)
+	DataService.SetSpeedTier(player, tierIndex)
+end
+
 local function purchaseZone(player, zoneName)
 	local profile = DataService.GetProfile(player)
 	if not profile then
@@ -80,6 +104,13 @@ function ShopService.Init()
 			return
 		end
 		purchaseZone(player, zoneName)
+	end)
+
+	Remotes.PurchaseSpeedTier.OnServerEvent:Connect(function(player, tierIndex)
+		if typeof(tierIndex) ~= "number" then
+			return
+		end
+		purchaseSpeedTier(player, tierIndex)
 	end)
 end
 

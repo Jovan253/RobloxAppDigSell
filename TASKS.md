@@ -165,8 +165,16 @@ User feedback: discovering an ore type should stay automatic (mining marks it fo
 - [x] Playtest live — confirmed working
 - [x] Journal didn't show per-mine Gems value on already-claimed rows (label text was only set in the unclaimed branches) — fixed, now shown regardless of claim state
 
-### Stage 2 (next round): Speed Boost + case-opening skins
-- [ ] Not started
+### Stage 2a (built 2026-09-23): Speed Boost
+- [x] `Config.SpeedTiers` (5 tiers, Gems-priced: 0/25/75/200/500, WalkSpeed 16/19/22/25/28) — top tier deliberately modest (~75% increase) since higher WalkSpeed also increases jump distance and would start trivializing Dark Mines/Sky Ruins parkour
+- [x] `DataService`: `SpeedTier` field on the profile (default 1, migration for pre-existing saves), mirrored to `PlayerData.SpeedTier`, `SetSpeedTier`; admin override now also maxes `SpeedTier`
+- [x] New `SpeedBoostService` (server) — reacts to `PlayerData.SpeedTier` changes + `CharacterAdded` to apply `Humanoid.WalkSpeed`, same reactive pattern as `PickaxeToolService`
+- [x] `ShopService`/`Remotes`: new `PurchaseSpeedTier` remote, validated in-order + against Gems balance (not Cash)
+- [x] `ShopUi.client.luau`: new "Speed Boost (Gems)" section between Zones and Rebirth
+- [ ] Not yet playtested live
+
+### Stage 2b (next round): case-opening cosmetic skin system
+- [ ] Not started — cases cost Gems, horizontal-spin reveal animation, weighted-rarity pickaxe skins, rarer skins get a particle effect attached (not just a recolor). Explicit gacha/case mechanic, not a direct-purchase shop, per user's correction.
 
 ## Immediate next steps
 

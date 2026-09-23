@@ -182,6 +182,20 @@ Config.Rebirth = {
 	MultiplierPerRebirth = 0.5, -- +50% cash per rebirth, stacking
 }
 
+-- Bought with Gems (not Cash), in order like PickaxeTiers. Top tier is a
+-- deliberately modest ~75% WalkSpeed increase, not a dramatic one -- higher
+-- WalkSpeed also increases horizontal jump distance in Roblox, so going
+-- much further would start trivializing the Dark Mines/Sky Ruins parkour.
+-- Not reset by Rebirth (that only resets the Cash-side economy; Gems and
+-- what they buy are deliberately kept separate).
+Config.SpeedTiers = {
+	{ Name = "Normal Pace", Cost = 0, WalkSpeed = 16 },
+	{ Name = "Brisk Pace", Cost = 25, WalkSpeed = 19 },
+	{ Name = "Swift Pace", Cost = 75, WalkSpeed = 22 },
+	{ Name = "Fleet Pace", Cost = 200, WalkSpeed = 25 },
+	{ Name = "Blazing Pace", Cost = 500, WalkSpeed = 28 },
+}
+
 
 Config.DataStoreName = "DigAndSellPlayerData_v1"
 Config.AutosaveInterval = 120 -- seconds

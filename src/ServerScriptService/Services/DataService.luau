@@ -14,7 +14,7 @@ local playerStore = DataStoreService:GetDataStore(Config.DataStoreName)
 
 local DataService = {}
 
-local profiles = {} -- [player] = { Cash, Gems, PickaxeTier, UnlockedZones, Rebirths, RebirthMultiplier, CollectedOreTypes, ClaimedOreTypes }
+local profiles = {} -- [player] = { Cash, Gems, PickaxeTier, UnlockedZones, Rebirths, RebirthMultiplier, CollectedOreTypes, ClaimedOreTypes, SpeedTier }
 
 local function defaultProfile()
 	return {
@@ -26,6 +26,7 @@ local function defaultProfile()
 		RebirthMultiplier = 1,
 		CollectedOreTypes = {}, -- set: [oreTypeName] = true -- discovered (Journal reveals it)
 		ClaimedOreTypes = {}, -- set: [oreTypeName] = true -- Journal reward already taken
+		SpeedTier = 1,
 	}
 end
 
@@ -86,6 +87,11 @@ local function setupPlayerData(player, profile)
 	pickaxeTier.Name = "PickaxeTier"
 	pickaxeTier.Value = profile.PickaxeTier
 	pickaxeTier.Parent = playerData
+
+	local speedTier = Instance.new("IntValue")
+	speedTier.Name = "SpeedTier"
+	speedTier.Value = profile.SpeedTier
+	speedTier.Parent = playerData
 
 	local unlockedZones = Instance.new("StringValue")
 	unlockedZones.Name = "UnlockedZones"
@@ -149,6 +155,18 @@ function DataService.SetPickaxeTier(player, tier)
 	local playerData = player:FindFirstChild("PlayerData")
 	if playerData then
 		playerData.PickaxeTier.Value = tier
+	end
+end
+
+function DataService.SetSpeedTier(player, tier)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	profile.SpeedTier = tier
+	local playerData = player:FindFirstChild("PlayerData")
+	if playerData then
+		playerData.SpeedTier.Value = tier
 	end
 end
 
@@ -265,9 +283,11 @@ local function loadProfile(player)
 	profile.Gems = profile.Gems or 0
 	profile.CollectedOreTypes = profile.CollectedOreTypes or {}
 	profile.ClaimedOreTypes = profile.ClaimedOreTypes or {}
+	profile.SpeedTier = profile.SpeedTier or 1
 
 	if Config.IsAdmin(player.UserId) then
 		profile.PickaxeTier = #Config.PickaxeTiers
+		profile.SpeedTier = #Config.SpeedTiers
 		profile.UnlockedZones = {}
 		for _, zoneConfig in Config.Zones do
 			table.insert(profile.UnlockedZones, zoneConfig.Name)
