@@ -4,9 +4,10 @@
 -- PlayerData.PickaxeTier's replicated value directly, so it stays correct
 -- through shop purchases, rebirth resets, and the admin override alike
 -- without needing to be called from each of those sites individually.
--- Purely cosmetic: mining itself still validates through each ore's
--- ClickDetector (see MiningService), unaffected by whether a tool is
--- equipped.
+-- The swing itself is cosmetic (see PickaxeSwing.client.luau, no hit
+-- detection tied to it -- mining stays click-based via ClickDetector), but
+-- MiningService now requires this Tool to actually be equipped (in
+-- Character, not just Backpack) before a click counts as a hit.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -43,13 +44,18 @@ local function buildToolTemplate(tierIndex)
 	handle.CanCollide = false
 	handle.Parent = tool
 
+	-- Head's long axis (1.6 studs) is X by default, same as an unrotated
+	-- Part -- it's already perpendicular to the vertical handle with no
+	-- rotation needed. The previous version rotated it 90 degrees around Z,
+	-- which swung its long axis to align WITH the handle instead of across
+	-- it -- a straight vertical stick (a "torch"), not a T/pickaxe shape.
 	local head = Instance.new("Part")
 	head.Name = "Head"
 	head.Size = Vector3.new(1.6, 0.4, 0.4)
 	head.Material = look.Material
 	head.Color = look.Color
 	head.CanCollide = false
-	head.CFrame = handle.CFrame * CFrame.new(0, 1.1, 0) * CFrame.Angles(0, 0, math.rad(90))
+	head.CFrame = handle.CFrame * CFrame.new(0, 1, 0) -- flush with the handle's top, no overlap
 	head.Parent = tool
 
 	local weld = Instance.new("WeldConstraint")

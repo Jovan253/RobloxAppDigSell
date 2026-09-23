@@ -22,8 +22,11 @@ local function hookTool(tool)
 		end
 		swinging = true
 
+		-- Flipped from the previous version, which swung downward -- this
+		-- direction/magnitude is still a guess (can't preview it), tell me
+		-- which way it should actually go if this isn't it.
 		local swingOut = TweenService:Create(tool, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
-			Grip = baseGrip * CFrame.Angles(math.rad(-60), 0, 0),
+			Grip = baseGrip * CFrame.Angles(math.rad(40), 0, 0),
 		})
 		swingOut:Play()
 		swingOut.Completed:Connect(function()

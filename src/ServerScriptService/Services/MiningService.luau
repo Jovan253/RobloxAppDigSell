@@ -87,6 +87,19 @@ local function createOreNode(oreType, cashValue, zoneName, respawnTime, position
 	click.MaxActivationDistance = 15
 	click.Parent = rock
 
+	-- Idle (Rate 0) -- fired on demand via :Emit() on each landed hit, see
+	-- playHitSparks. Leaving Texture unset uses the engine's default
+	-- particle look rather than guessing at a built-in asset path.
+	local sparks = Instance.new("ParticleEmitter")
+	sparks.Name = "MiningSparks"
+	sparks.Rate = 0
+	sparks.Lifetime = NumberRange.new(0.15, 0.35)
+	sparks.Speed = NumberRange.new(6, 12)
+	sparks.SpreadAngle = Vector2.new(45, 45)
+	sparks.Color = ColorSequence.new(oreType.Color)
+	sparks.Size = NumberSequence.new(0.35, 0)
+	sparks.Parent = rock
+
 	if oreType.Glow then
 		local vein = Instance.new("Part")
 		vein.Name = "Vein"
@@ -548,6 +561,30 @@ local function rebirthMultiplier(player)
 	return profile and profile.RebirthMultiplier or 1
 end
 
+-- No mining bare-handed: the player must have their pickaxe Tool actually
+-- equipped (parented to Character, not just sitting in Backpack), matching
+-- now that there's a visible tool to swing -- see PickaxeToolService.
+local function hasPickaxeEquipped(player)
+	local character = player.Character
+	if not character then
+		return false
+	end
+	for _, item in character:GetChildren() do
+		if item:IsA("Tool") and item:GetAttribute("IsPickaxe") then
+			return true
+		end
+	end
+	return false
+end
+
+local function playHitSparks(node, amount)
+	local rock = node:FindFirstChild("Rock")
+	local sparks = rock and rock:FindFirstChild("MiningSparks")
+	if sparks then
+		sparks:Emit(amount)
+	end
+end
+
 -- Each hit removes the clicking player's pickaxe Damage from the node's
 -- shared Health -- this generalizes correctly even when different-tier
 -- players are hitting the same ore, since damage just adds up toward the
@@ -561,11 +598,19 @@ local function onNodeClicked(node, player)
 		return
 	end
 
+	if not hasPickaxeEquipped(player) then
+		Remotes.ZoneNotice:FireClient(player, "Equip your pickaxe to mine!")
+		return
+	end
+
 	local health = (node:GetAttribute("Health") or Config.OreMaxHealth) - pickaxeDamage(player)
 	if health > 0 then
 		node:SetAttribute("Health", health)
+		playHitSparks(node, 8)
 		return
 	end
+
+	playHitSparks(node, 20)
 
 	local baseValue = node:GetAttribute("CashValue") or 1
 	local reward = baseValue
