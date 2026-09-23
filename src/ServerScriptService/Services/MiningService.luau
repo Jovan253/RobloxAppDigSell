@@ -407,6 +407,44 @@ local function setupFallKillZone(triggerPart, zoneName, defaultCFrame, message)
 	end)
 end
 
+-- Jump platforms drift side-to-side (a smooth back-and-forth tween on their
+-- CFrame, not physics) rather than sitting still, adding a timing element
+-- on top of the jump distance itself. Anchored parts moved via CFrame carry
+-- a standing player along automatically, same as any Roblox moving
+-- platform. Period and starting side are randomized per platform so they
+-- don't all swing in sync (more readable individually, less predictable as
+-- a set).
+local PLATFORM_OSCILLATION_AMPLITUDE = 3 -- studs each side of center
+local PLATFORM_OSCILLATION_PERIOD_MIN = 1.4 -- seconds per half-swing
+local PLATFORM_OSCILLATION_PERIOD_MAX = 2.0
+
+local function addOscillatingPlatform(zoneConfig, zoneFolder, name, widthOffset, depthOffset, yOffset, size, material, color)
+	local platform = Instance.new("Part")
+	platform.Name = name
+	platform.Anchored = true
+	platform.Size = ZoneGeometry.size(zoneConfig, size.X, size.Z, size.Y)
+	platform.Material = material
+	platform.Color = color
+	platform.Parent = zoneFolder
+
+	local leftCFrame = CFrame.new(ZoneGeometry.point(zoneConfig, widthOffset - PLATFORM_OSCILLATION_AMPLITUDE, depthOffset, yOffset))
+	local rightCFrame = CFrame.new(ZoneGeometry.point(zoneConfig, widthOffset + PLATFORM_OSCILLATION_AMPLITUDE, depthOffset, yOffset))
+	local period = PLATFORM_OSCILLATION_PERIOD_MIN + math.random() * (PLATFORM_OSCILLATION_PERIOD_MAX - PLATFORM_OSCILLATION_PERIOD_MIN)
+	local startsLeft = math.random() < 0.5
+
+	platform.CFrame = startsLeft and leftCFrame or rightCFrame
+	local target = startsLeft and rightCFrame or leftCFrame
+
+	local tween = TweenService:Create(
+		platform,
+		TweenInfo.new(period, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+		{ CFrame = target }
+	)
+	tween:Play()
+
+	return platform
+end
+
 local function buildDarkMines(zoneConfig, zonesFolder)
 	local zoneFolder = Instance.new("Folder")
 	zoneFolder.Name = zoneConfig.Name
@@ -467,26 +505,36 @@ local function buildDarkMines(zoneConfig, zonesFolder)
 	addPitEndWall(origin.Z + DARK_MINES_ENTRANCE_DEPTH)
 	addPitEndWall(origin.Z + DARK_MINES_ENTRANCE_DEPTH + DARK_MINES_LAVA_DEPTH)
 
-	-- Jump platforms across the lava, zigzagging left/right
+	-- Jump platforms across the lava, zigzagging left/right and each
+	-- drifting side-to-side (see addOscillatingPlatform). The mid-platform
+	-- checkpoint is sized to cover its full swing range rather than tied to
+	-- wherever the platform currently is, since the platform itself moves.
 	local zStep = DARK_MINES_LAVA_DEPTH / (DARK_MINES_PLATFORM_COUNT + 1)
 	local midIndex = math.floor(DARK_MINES_PLATFORM_COUNT / 2) + 1
 
 	for i = 1, DARK_MINES_PLATFORM_COUNT do
-		local px = origin.X + (i % 2 == 0 and 1 or -1) * DARK_MINES_PLATFORM_X_OFFSET
-		local pz = origin.Z + DARK_MINES_ENTRANCE_DEPTH + zStep * i
-		local platformCFrame = CFrame.new(px, origin.Y, pz)
+		local widthOffset = (i % 2 == 0 and 1 or -1) * DARK_MINES_PLATFORM_X_OFFSET
+		local depthOffset = DARK_MINES_ENTRANCE_DEPTH + zStep * i
 
-		local platform = Instance.new("Part")
-		platform.Name = "Platform" .. i
-		platform.Anchored = true
-		platform.Size = DARK_MINES_PLATFORM_SIZE
-		platform.CFrame = platformCFrame
-		platform.Material = zoneConfig.WallMaterial
-		platform.Color = zoneConfig.WallColor
-		platform.Parent = zoneFolder
+		addOscillatingPlatform(
+			zoneConfig,
+			zoneFolder,
+			"Platform" .. i,
+			widthOffset,
+			depthOffset,
+			0,
+			DARK_MINES_PLATFORM_SIZE,
+			zoneConfig.WallMaterial,
+			zoneConfig.WallColor
+		)
 
 		if i == midIndex then
-			addCheckpoint(zoneFolder, platformCFrame + Vector3.new(0, 2.5, 0), Vector3.new(DARK_MINES_PLATFORM_SIZE.X, 3, DARK_MINES_PLATFORM_SIZE.Z), 2)
+			addCheckpoint(
+				zoneFolder,
+				CFrame.new(ZoneGeometry.point(zoneConfig, widthOffset, depthOffset, 2.5)),
+				ZoneGeometry.size(zoneConfig, DARK_MINES_PLATFORM_SIZE.X + PLATFORM_OSCILLATION_AMPLITUDE * 2, DARK_MINES_PLATFORM_SIZE.Z, 3),
+				2
+			)
 		end
 	end
 
@@ -561,16 +609,18 @@ local function buildSkyRuins(zoneConfig, zonesFolder)
 	for i = 1, SKY_RUINS_PLATFORM_COUNT do
 		local widthOffset = (i % 2 == 0 and 1 or -1) * SKY_RUINS_PLATFORM_X_OFFSET
 		local depthOffset = SKY_RUINS_ENTRANCE_DEPTH + zStep * i
-		local platformCFrame = CFrame.new(ZoneGeometry.point(zoneConfig, widthOffset, depthOffset, 0))
 
-		local platform = Instance.new("Part")
-		platform.Name = "Platform" .. i
-		platform.Anchored = true
-		platform.Size = ZoneGeometry.size(zoneConfig, SKY_RUINS_PLATFORM_SIZE.X, SKY_RUINS_PLATFORM_SIZE.Z, SKY_RUINS_PLATFORM_SIZE.Y)
-		platform.CFrame = platformCFrame
-		platform.Material = zoneConfig.WallMaterial
-		platform.Color = zoneConfig.WallColor
-		platform.Parent = zoneFolder
+		addOscillatingPlatform(
+			zoneConfig,
+			zoneFolder,
+			"Platform" .. i,
+			widthOffset,
+			depthOffset,
+			0,
+			SKY_RUINS_PLATFORM_SIZE,
+			zoneConfig.WallMaterial,
+			zoneConfig.WallColor
+		)
 	end
 
 	-- Treasure platform (rare ore), past the gap
