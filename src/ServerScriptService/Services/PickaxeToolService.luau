@@ -42,6 +42,11 @@ local function buildToolTemplate(tierIndex)
 	handle.Material = Enum.Material.Wood
 	handle.Color = Color3.fromRGB(92, 64, 40)
 	handle.CanCollide = false
+	-- CanQuery defaults to true even with CanCollide false -- without this,
+	-- the equipped tool sits between the camera and whatever you're
+	-- clicking on, and your click raycast hits the pickaxe itself instead
+	-- of passing through to the ore's ClickDetector behind it.
+	handle.CanQuery = false
 	handle.Parent = tool
 
 	-- Head's long axis (1.6 studs) is X by default, same as an unrotated
@@ -55,6 +60,7 @@ local function buildToolTemplate(tierIndex)
 	head.Material = look.Material
 	head.Color = look.Color
 	head.CanCollide = false
+	head.CanQuery = false
 	head.CFrame = handle.CFrame * CFrame.new(0, 1, 0) -- flush with the handle's top, no overlap
 	head.Parent = tool
 
