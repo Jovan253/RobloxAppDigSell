@@ -239,12 +239,15 @@ local function buildZoneSign(zoneConfig, zoneFolder)
 	local depthOffset = zoneConfig.UnlockCost > 0 and 6 or zoneConfig.RoomSize.Z / 2
 	local position = ZoneGeometry.point(zoneConfig, 0, depthOffset, 0)
 
+	-- Thinner than the board (0.6 studs) on both horizontal axes so it can't
+	-- poke through the board's face on whichever axis ends up being "depth"
+	-- for this zone's orientation.
 	local post = Instance.new("Part")
 	post.Name = "SignPost"
 	post.Anchored = true
 	post.Material = Enum.Material.Wood
 	post.Color = Color3.fromRGB(92, 64, 40)
-	post.Size = Vector3.new(1, 7, 1)
+	post.Size = Vector3.new(0.6, 7, 0.6)
 	post.CFrame = CFrame.new(position + Vector3.new(0, 3.5, 0))
 	post.Parent = zoneFolder
 
