@@ -111,7 +111,10 @@ User request: add Sky Ruins so all 4 hub sides are used, move spawn to hub cente
 - [x] Sky Ruins (Zone5, South side, 75000 to unlock — new top tier above Dark Mines) — safe entrance ore, open bottomless-drop gap (non-solid kill-trigger far below floor, not lava), zigzag jump platforms, 3-stage checkpoints, treasure platform with rare Sky Shard ore. Built via `ZoneGeometry` throughout (orientation-aware), unlike Dark Mines which stays hardcoded North-only.
 - [x] **Bug found and fixed while building this**: checkpoint tracking was keyed only by player, not by zone — invisible with one parkour zone, but with two (Dark Mines + Sky Ruins), falling in one before touching its checkpoints would've sent the player back to wherever they last checkpointed in the *other* zone. Checkpoints are now scoped per-zone. Generalized `setupLavaKillZone` into `setupFallKillZone` (zone-scoped lookup, caller-supplied message) so both zones share the same fall-recovery logic.
 - [x] Spawn moved to the hub's center (`EnvironmentService.setupSpawn`) — replaces any existing SpawnLocation with exactly one, since no hub side is left open as an entrance anymore.
-- [ ] Playtest all of the above live in Studio — not tested yet, and this was a large geometry change (verified by hand-tracing the coordinate math for zone/rectangle overlaps, not in-engine). Sky Ruins' platform spacing/void depth are a first pass like Dark Mines' were and may need tuning.
+- [x] Playtest all of the above live in Studio — confirmed: "hub is good, spawn is good, no gaps"
+- [x] Sky Ruins jumps "slightly too hard" — eased zigzag offset (8→6 studs) and enlarged landing platforms (6x1x5→7x1x6) for both Dark Mines and Sky Ruins, since they share the same math
+- [x] Removed the Sky Ruins mid-gap checkpoint per feedback (entrance + treasure only now; Dark Mines keeps its mid-checkpoint, untouched)
+- [ ] Playtest the eased jump difficulty + checkpoint removal — not tested yet
 
 ## Future ideas (not in MVP scope)
 
