@@ -289,6 +289,11 @@ end
 
 local skinRows = {}
 
+-- Set while a case's reel is spinning so the "My Skins" refresh below
+-- doesn't reveal the won skin the instant the server grants it (which
+-- replicates well before the reel finishes) -- spoils the reveal otherwise.
+local spinning = false
+
 do
 	local swatch, label, button = addSkinRow(0)
 	swatch.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -362,15 +367,21 @@ local function refreshOpenButton()
 	end
 end
 
-ownedSkinsValue:GetPropertyChangedSignal("Value"):Connect(refreshInventory)
-equippedSkinValue:GetPropertyChangedSignal("Value"):Connect(refreshInventory)
+ownedSkinsValue:GetPropertyChangedSignal("Value"):Connect(function()
+	if not spinning then
+		refreshInventory()
+	end
+end)
+equippedSkinValue:GetPropertyChangedSignal("Value"):Connect(function()
+	if not spinning then
+		refreshInventory()
+	end
+end)
 gemsValue:GetPropertyChangedSignal("Value"):Connect(refreshOpenButton)
 refreshInventory()
 refreshOpenButton()
 
 -- === Case opening / reel spin ===
-
-local spinning = false
 
 local function buildReel(resultSkinName)
 	-- Not ClearAllChildren -- that would also destroy reelListLayout, which
@@ -417,6 +428,7 @@ local function spinToResult(resultSkinName, isNew, refund)
 			resultLabel.Text = ("Duplicate %s -- +%d Gems"):format(resultSkin.Name, refund)
 		end
 		spinning = false
+		refreshInventory()
 		refreshOpenButton()
 	end)
 end
