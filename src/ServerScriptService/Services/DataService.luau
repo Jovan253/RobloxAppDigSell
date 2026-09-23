@@ -14,7 +14,7 @@ local playerStore = DataStoreService:GetDataStore(Config.DataStoreName)
 
 local DataService = {}
 
-local profiles = {} -- [player] = { Cash, Gems, PickaxeTier, UnlockedZones, Rebirths, RebirthMultiplier, CollectedOreTypes, ClaimedOreTypes, SpeedTier }
+local profiles = {} -- [player] = { Cash, Gems, PickaxeTier, UnlockedZones, Rebirths, RebirthMultiplier, CollectedOreTypes, ClaimedOreTypes, SpeedTier, OwnedSkins, EquippedSkin }
 
 local function defaultProfile()
 	return {
@@ -27,6 +27,8 @@ local function defaultProfile()
 		CollectedOreTypes = {}, -- set: [oreTypeName] = true -- discovered (Journal reveals it)
 		ClaimedOreTypes = {}, -- set: [oreTypeName] = true -- Journal reward already taken
 		SpeedTier = 1,
+		OwnedSkins = {}, -- set: [skinName] = true -- won from a case
+		EquippedSkin = "", -- "" = no skin, tool keeps its natural look
 	}
 end
 
@@ -112,6 +114,16 @@ local function setupPlayerData(player, profile)
 	claimedOreTypes.Name = "ClaimedOreTypes"
 	claimedOreTypes.Value = setToCommaString(profile.ClaimedOreTypes)
 	claimedOreTypes.Parent = playerData
+
+	local ownedSkins = Instance.new("StringValue")
+	ownedSkins.Name = "OwnedSkins"
+	ownedSkins.Value = setToCommaString(profile.OwnedSkins)
+	ownedSkins.Parent = playerData
+
+	local equippedSkin = Instance.new("StringValue")
+	equippedSkin.Name = "EquippedSkin"
+	equippedSkin.Value = profile.EquippedSkin
+	equippedSkin.Parent = playerData
 
 	-- Not part of `profile`/DataStore -- gamepass ownership is authoritative
 	-- on Roblox's side and re-checked by MarketplaceService each session.
@@ -242,6 +254,40 @@ function DataService.MarkOreTypeClaimed(player, oreTypeName)
 	return true
 end
 
+-- Returns true only the first time this skin is won (false if already
+-- owned) -- CaseService uses this to decide whether to grant the skin or
+-- refund Gems for a duplicate roll instead.
+function DataService.AddOwnedSkin(player, skinName)
+	local profile = profiles[player]
+	if not profile or profile.OwnedSkins[skinName] then
+		return false
+	end
+
+	profile.OwnedSkins[skinName] = true
+	local playerData = player:FindFirstChild("PlayerData")
+	if playerData then
+		playerData.OwnedSkins.Value = setToCommaString(profile.OwnedSkins)
+	end
+	return true
+end
+
+function DataService.HasOwnedSkin(player, skinName)
+	local profile = profiles[player]
+	return profile ~= nil and (skinName == "" or profile.OwnedSkins[skinName] == true)
+end
+
+function DataService.SetEquippedSkin(player, skinName)
+	local profile = profiles[player]
+	if not profile then
+		return
+	end
+	profile.EquippedSkin = skinName
+	local playerData = player:FindFirstChild("PlayerData")
+	if playerData then
+		playerData.EquippedSkin.Value = skinName
+	end
+end
+
 function DataService.SetOwnsDoubleCash(player, owns)
 	local playerData = player:FindFirstChild("PlayerData")
 	if playerData then
@@ -284,6 +330,8 @@ local function loadProfile(player)
 	profile.CollectedOreTypes = profile.CollectedOreTypes or {}
 	profile.ClaimedOreTypes = profile.ClaimedOreTypes or {}
 	profile.SpeedTier = profile.SpeedTier or 1
+	profile.OwnedSkins = profile.OwnedSkins or {}
+	profile.EquippedSkin = profile.EquippedSkin or ""
 
 	if Config.IsAdmin(player.UserId) then
 		profile.PickaxeTier = #Config.PickaxeTiers

@@ -175,8 +175,13 @@ User feedback: discovering an ore type should stay automatic (mining marks it fo
 - [x] Gem Packs (Robux → Gems) live: `Config.GemProducts` (Gem Pouch 3714385564/100 Gems/79 Robux, Gem Hoard 3714385698/500 Gems/299 Robux), `MarketplaceService` grants Gems via the same `ProcessReceipt` path as Cash Packs, `GemShopUi` "Buy Gems (Robux)" section
 - [ ] Not yet playtested live
 
-### Stage 2b (next round): case-opening cosmetic skin system
-- [ ] Not started — cases cost Gems, horizontal-spin reveal animation, weighted-rarity pickaxe skins, rarer skins get a particle effect attached (not just a recolor). Explicit gacha/case mechanic, not a direct-purchase shop, per user's correction.
+### Stage 2b (built 2026-09-23): case-opening cosmetic skin system
+- [x] `Config.PickaxeSkins` (8 skins across 4 rarities: Common/Uncommon/Rare/Legendary, weighted like ore), `Config.CaseCost` (50 Gems), `Config.CaseDuplicateRefund` (20 Gems)
+- [x] `DataService`: `OwnedSkins` (set) + `EquippedSkin` (string, "" = natural look) on the profile, migration, `AddOwnedSkin`/`HasOwnedSkin`/`SetEquippedSkin`
+- [x] New `CaseService` (server) — `OpenCase` remote: validates/deducts Gems, weighted-random skin roll (same cumulative-roll pattern as ore), grants if new or refunds `CaseDuplicateRefund` Gems if a dupe, tells the client the result via `CaseResult`. `EquipSkin` remote validates ownership.
+- [x] `PickaxeToolService` extended: reacts to `PlayerData.EquippedSkin` same as `PickaxeTier`, recolors the equipped tool's parts to the skin color, and for `Sparkle`-tier skins adds a built-in `Sparkles` instance to the Handle (no Texture asset needed, sidesteps the invisible-ParticleEmitter bug hit earlier) instead of just a recolor
+- [x] New `CaseUi.client.luau` ("Cases" button / "C" key, gold-themed): horizontal spinning reel (client-built decorative strip, always lands on the server-committed result — nothing to fake by watching it spin) + "My Skins" inventory list (owned skins equippable, unowned show "???" + rarity)
+- [ ] Not yet playtested live
 
 ## Immediate next steps
 

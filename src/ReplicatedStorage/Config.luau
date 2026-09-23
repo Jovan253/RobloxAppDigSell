@@ -196,6 +196,25 @@ Config.SpeedTiers = {
 	{ Name = "Blazing Pace", Cost = 500, WalkSpeed = 28 },
 }
 
+-- Pickaxe skins, won from cases (not bought directly -- see CaseService).
+-- Weight follows the same relative-weight pattern as ore Weight (picked via
+-- the same cumulative-roll approach as MiningService's pickOreType).
+-- `Sparkle` marks the rarer tiers that get an attached particle effect
+-- (a built-in Sparkles instance parented to the tool's Handle -- no Texture
+-- asset needed, which sidesteps the invisible-ParticleEmitter bug hit
+-- earlier with the mining hit effect) rather than just a recolor.
+Config.CaseCost = 50 -- Gems per case
+Config.CaseDuplicateRefund = 20 -- Gems refunded when a case rolls a skin you already own
+Config.PickaxeSkins = {
+	{ Name = "Rustic Bronze", Rarity = "Common", Weight = 40, Color = Color3.fromRGB(140, 95, 45) },
+	{ Name = "Steel Grey", Rarity = "Common", Weight = 40, Color = Color3.fromRGB(150, 150, 160) },
+	{ Name = "Forest Green", Rarity = "Uncommon", Weight = 20, Color = Color3.fromRGB(45, 120, 60) },
+	{ Name = "Ocean Blue", Rarity = "Uncommon", Weight = 20, Color = Color3.fromRGB(40, 110, 180) },
+	{ Name = "Crimson", Rarity = "Rare", Weight = 8, Color = Color3.fromRGB(180, 30, 30), Sparkle = true },
+	{ Name = "Violet Storm", Rarity = "Rare", Weight = 8, Color = Color3.fromRGB(130, 50, 200), Sparkle = true },
+	{ Name = "Golden Radiance", Rarity = "Legendary", Weight = 2, Color = Color3.fromRGB(255, 200, 40), Sparkle = true },
+	{ Name = "Void Prism", Rarity = "Legendary", Weight = 2, Color = Color3.fromRGB(35, 20, 45), Sparkle = true },
+}
 
 Config.DataStoreName = "DigAndSellPlayerData_v1"
 Config.AutosaveInterval = 120 -- seconds

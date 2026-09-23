@@ -21,6 +21,39 @@ local PickaxeToolService = {}
 
 local sourceAsset = ServerStorage:WaitForChild("PickaxeAsset")
 
+local SKIN_BY_NAME = {}
+for _, skin in Config.PickaxeSkins do
+	SKIN_BY_NAME[skin.Name] = skin
+end
+
+-- Recolors every part of an equipped tool to the given skin (won from a
+-- case -- see CaseService) and, for the rarer tiers, adds a Sparkles
+-- instance to the Handle. Sparkles needs no Texture asset to render (unlike
+-- ParticleEmitter, which bit us earlier with an invisible mining-hit
+-- effect), so it's the simplest reliable way to give a skin a "not just a
+-- recolor" particle effect.
+local function applySkin(tool, skinName)
+	local skin = SKIN_BY_NAME[skinName]
+	if not skin then
+		return
+	end
+
+	for _, descendant in tool:GetDescendants() do
+		if descendant:IsA("BasePart") then
+			descendant.Color = skin.Color
+		end
+	end
+
+	if skin.Sparkle then
+		local handle = tool:FindFirstChild("Handle")
+		if handle then
+			local sparkles = Instance.new("Sparkles")
+			sparkles.SparkleColor = skin.Color
+			sparkles.Parent = handle
+		end
+	end
+end
+
 local toolTemplates = {}
 
 -- PickaxeAsset turned out to be a Model, not a ready-to-equip Tool (free
@@ -136,14 +169,22 @@ local function equipCurrentTier(player)
 	end
 
 	local tool = getToolTemplate(profile.PickaxeTier):Clone()
+	if profile.EquippedSkin ~= "" then
+		applySkin(tool, profile.EquippedSkin)
+	end
 	tool.Parent = backpack
 end
 
 local function hookPlayer(player)
 	local playerData = player:WaitForChild("PlayerData")
 	local pickaxeTierValue = playerData:WaitForChild("PickaxeTier")
+	local equippedSkinValue = playerData:WaitForChild("EquippedSkin")
 
 	pickaxeTierValue:GetPropertyChangedSignal("Value"):Connect(function()
+		equipCurrentTier(player)
+	end)
+
+	equippedSkinValue:GetPropertyChangedSignal("Value"):Connect(function()
 		equipCurrentTier(player)
 	end)
 
