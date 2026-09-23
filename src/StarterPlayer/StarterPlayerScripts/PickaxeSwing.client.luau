@@ -1,10 +1,14 @@
--- Cosmetic swing for the player's equipped pickaxe (a Tool tagged
--- IsPickaxe, given by PickaxeToolService). Tweens the Tool's Grip briefly
--- on Activated (fires on click while equipped) rather than using an
--- uploaded Animation asset. Purely visual -- actual mining validation and
--- reward stay server-side via each ore's ClickDetector, unaffected by this.
+-- Swing for the player's equipped pickaxe (a Tool tagged IsPickaxe, given
+-- by PickaxeToolService). Tweens the Tool's Grip briefly on Activated
+-- rather than using an uploaded Animation asset, and fires Remotes.MineHit
+-- so the server applies a hit to the nearest ore in range -- mining no
+-- longer goes through a ClickDetector at all (see MiningService for why:
+-- ClickDetector hover/clicks don't fire while any Tool is equipped).
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+
+local Remotes = require(ReplicatedStorage:WaitForChild("Remotes"))
 
 local player = Players.LocalPlayer
 
@@ -21,6 +25,8 @@ local function hookTool(tool)
 			return
 		end
 		swinging = true
+
+		Remotes.MineHit:FireServer()
 
 		-- Flipped from the previous version, which swung downward -- this
 		-- direction/magnitude is still a guess (can't preview it), tell me

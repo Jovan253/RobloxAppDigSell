@@ -1,12 +1,14 @@
 -- Builds all zones procedurally (so the game is playable the moment you hit
--- Play, before any hand-built map exists) and handles click-to-mine on ore
--- nodes. Standard zones (Zone1-3) are an enclosed room shell with ore
--- scattered across the floor by weighted rarity; Dark Mines (Zone4) gets a
--- hand-laid-out entrance/lava/parkour/treasure sequence instead. Swap any of
--- this for hand-built Studio geometry later -- just keep OreNode's Model
--- shape (a "Rock" BasePart child with the ClickDetector, optional "Vein"
--- accent) and attributes (CashValue/RespawnTime/ZoneName) so this service
--- still recognizes it.
+-- Play, before any hand-built map exists) and handles pickaxe-swing mining
+-- on ore nodes (see Remotes.MineHit -- proximity-based, not a ClickDetector;
+-- ClickDetector hover/clicks don't fire while a Tool is equipped, which
+-- mining now requires). Standard zones (Zone1-3) are an enclosed room shell
+-- with ore scattered across the floor by weighted rarity; Dark Mines
+-- (Zone4) gets a hand-laid-out entrance/lava/parkour/treasure sequence
+-- instead. Swap any of this for hand-built Studio geometry later -- just
+-- keep OreNode's Model shape (a "Rock" BasePart child, optional "Vein"
+-- accent) and attributes (CashValue/RespawnTime/ZoneName/Health) so this
+-- service still recognizes it.
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
@@ -82,10 +84,6 @@ local function createOreNode(oreType, cashValue, zoneName, respawnTime, position
 	rock.Color = oreType.Color
 	rock.CFrame = CFrame.new(position) * CFrame.Angles(0, math.rad(math.random(0, 359)), 0)
 	rock.Parent = model
-
-	local click = Instance.new("ClickDetector")
-	click.MaxActivationDistance = 15
-	click.Parent = rock
 
 	-- Idle (Rate 0) -- fired on demand via :Emit() on each landed hit, see
 	-- playHitSparks. Leaving Texture unset uses the engine's default
@@ -585,24 +583,41 @@ local function playHitSparks(node, amount)
 	end
 end
 
--- Each hit removes the clicking player's pickaxe Damage from the node's
+-- Mining is triggered by the pickaxe Tool's Activated event (see
+-- Remotes.MineHit / PickaxeSwing.client.luau), not a ClickDetector on each
+-- ore: Roblox's default controls stop evaluating ClickDetector hover/clicks
+-- entirely while any Tool is equipped, so a click-target-based trigger
+-- can't coexist with requiring a pickaxe equipped. Instead, the server
+-- picks the nearest ore in range of the swinging player.
+local MINE_RANGE = 10 -- studs from character to ore
+
+local function findNearestOre(player)
+	local character = player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return nil
+	end
+
+	local nearest, nearestDistance
+	for _, node in CollectionService:GetTagged(ORE_TAG) do
+		local rock = node:FindFirstChild("Rock")
+		if rock then
+			local distance = (rock.Position - root.Position).Magnitude
+			if distance <= MINE_RANGE and (not nearestDistance or distance < nearestDistance) then
+				nearest = node
+				nearestDistance = distance
+			end
+		end
+	end
+
+	return nearest
+end
+
+-- Each hit removes the swinging player's pickaxe Damage from the node's
 -- shared Health -- this generalizes correctly even when different-tier
 -- players are hitting the same ore, since damage just adds up toward the
--- same pool regardless of who's dealing it. No debounce needed: the
--- handler never yields, so Luau can't interleave two firings of it (a
--- rapid double-click legitimately registers as two hits, which is the
--- desired multi-hit behavior, not a race to guard against).
-local function onNodeClicked(node, player)
-	local zoneName = node:GetAttribute("ZoneName")
-	if not isZoneUnlocked(player, zoneName) then
-		return
-	end
-
-	if not hasPickaxeEquipped(player) then
-		Remotes.ZoneNotice:FireClient(player, "Equip your pickaxe to mine!")
-		return
-	end
-
+-- same pool regardless of who's dealing it.
+local function applyHit(node, player)
 	local health = (node:GetAttribute("Health") or Config.OreMaxHealth) - pickaxeDamage(player)
 	if health > 0 then
 		node:SetAttribute("Health", health)
@@ -632,25 +647,29 @@ local function onNodeClicked(node, player)
 	end)
 end
 
-local function hookNode(node)
-	local rock = node:FindFirstChild("Rock")
-	local click = rock and rock:FindFirstChildOfClass("ClickDetector")
-	if not click then
+local function onMineHit(player)
+	if not hasPickaxeEquipped(player) then
+		Remotes.ZoneNotice:FireClient(player, "Equip your pickaxe to mine!")
 		return
 	end
-	click.MouseClick:Connect(function(player)
-		onNodeClicked(node, player)
-	end)
+
+	local node = findNearestOre(player)
+	if not node then
+		return
+	end
+
+	local zoneName = node:GetAttribute("ZoneName")
+	if not isZoneUnlocked(player, zoneName) then
+		return
+	end
+
+	applyHit(node, player)
 end
 
 function MiningService.Init()
 	ensureZonesExist()
 
-	for _, node in CollectionService:GetTagged(ORE_TAG) do
-		hookNode(node)
-	end
-
-	CollectionService:GetInstanceAddedSignal(ORE_TAG):Connect(hookNode)
+	Remotes.MineHit.OnServerEvent:Connect(onMineHit)
 
 	Players.PlayerRemoving:Connect(function(player)
 		lastCheckpoint[player] = nil
