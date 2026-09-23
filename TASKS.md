@@ -28,10 +28,20 @@ User's ideas: fix the grey/flat map, spread zones/ores out more, more zones, mor
 - [x] Add Dark Mines zone (Zone4, 25000 cost) — safe entrance ore, lava pit, zigzag jump platforms, 3-stage checkpoint system, treasure platform with rare Cursed Ruby ore
 - [x] Lava fall → teleport to last checkpoint + `ZoneToast` "you fell in" message
 - [x] Jumpscare Prank plumbing — `MarketplaceService` grant logic + `JumpscareEffect.client.luau` (flash effect; sound left blank, needs a real asset ID), gated behind `Config.JumpscareProductId` (currently nil)
-- [ ] Playtest all of the above live in Studio — **none of this has been tested live yet**, this was a large change built in one pass. Expect the Dark Mines jump-platform spacing/lava depth specifically to need tuning (sized for default WalkSpeed/JumpPower, not verified in-engine)
+- [x] Playtest map/ore visuals live in Studio — confirmed "looks ok for most part" (2026-09-23)
+- [ ] Playtest the Dark Mines lava/parkour/checkpoint flow live — not tested yet
 - [ ] Create the "Jumpscare Prank" developer product in the Creator Dashboard, send the ID, so it can be wired into `Config.JumpscareProductId`
 - [ ] Find/set a real sound asset ID for the jumpscare effect (`JumpscareEffect.client.luau`'s `SoundId` is blank)
 - [ ] Gotcha if re-testing: `MiningService` only builds `MiningZones` if that folder doesn't already exist in Workspace — if Studio's Edit-mode Workspace somehow still has a leftover one from before, delete it manually or the old map will keep showing
+
+## Follow-up round 2 (2026-09-23, based on first live look)
+
+User feedback after seeing the map/ore/Dark Mines work: layout felt like one long corridor rather than a hub, no visual indicator blocking locked zones, and ore should stop reappearing in the exact same spot.
+
+- [x] Hub-and-spoke layout — Zone1 (Sunny Quarry) is now a wide-open central hub with no walls; Zone2/3/4 sit in separate X lanes along its north edge, each reachable directly from the hub rather than one zone after another
+- [x] Locked-zone barriers — red translucent Part blocks each locked zone's entrance, client-side only (`ZoneBarriers.client.luau`) so it's per-player correct (blocks you specifically until *you* unlock that zone) without needing per-player CollisionGroups; real security stays server-side in `MiningService`'s existing unlock check
+- [x] Destroy-and-relocate ore respawn — mining now destroys the node outright (no more ghost-transparency) and respawns a new one at a random slot from that zone's fixed pool of positions, so ore drifts around instead of always reappearing in the same spot
+- [ ] Playtest all of the above live in Studio — not tested yet
 
 ## Future ideas (not in MVP scope)
 
