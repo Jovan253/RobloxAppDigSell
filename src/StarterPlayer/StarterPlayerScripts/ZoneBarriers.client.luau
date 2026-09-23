@@ -26,7 +26,12 @@ local function isUnlocked(zoneName)
 	return false
 end
 
-local barriers = {} -- [zoneName] = Part
+local function formatNumber(n)
+	local formatted = tostring(math.floor(n)):reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	return (formatted:gsub("^,", ""))
+end
+
+local barriers = {} -- [zoneName] = { part = Part, gui = SurfaceGui }
 
 for _, zoneConfig in Config.Zones do
 	if zoneConfig.UnlockCost > 0 then
@@ -45,15 +50,35 @@ for _, zoneConfig in Config.Zones do
 		barrier.CFrame = CFrame.new(origin.X, origin.Y + height / 2, origin.Z)
 		barrier.Parent = Workspace
 
-		barriers[zoneConfig.Name] = barrier
+		-- Face = Front means the label renders on the -Z side of the part,
+		-- which (since none of this is rotated) is the side facing the hub
+		-- -- i.e. readable as you walk up to the entrance.
+		local gui = Instance.new("SurfaceGui")
+		gui.Name = "Label"
+		gui.Face = Enum.NormalId.Front
+		gui.LightInfluence = 0
+		gui.Parent = barrier
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.BackgroundTransparency = 1
+		label.Font = Enum.Font.GothamBold
+		label.TextColor3 = Color3.fromRGB(255, 255, 255)
+		label.TextStrokeTransparency = 0.2
+		label.TextScaled = true
+		label.Text = ("%s\n%s Cash to Unlock"):format(zoneConfig.DisplayName, formatNumber(zoneConfig.UnlockCost))
+		label.Parent = gui
+
+		barriers[zoneConfig.Name] = { part = barrier, gui = gui }
 	end
 end
 
 local function refresh()
 	for zoneName, barrier in barriers do
 		local unlocked = isUnlocked(zoneName)
-		barrier.CanCollide = not unlocked
-		barrier.Transparency = unlocked and 1 or 0.6
+		barrier.part.CanCollide = not unlocked
+		barrier.part.Transparency = unlocked and 1 or 0.6
+		barrier.gui.Enabled = not unlocked
 	end
 end
 
