@@ -88,6 +88,12 @@ local function buildToolTemplate(tierIndex)
 		end
 	end
 
+	-- Roll 90 degrees around the axis pointing away from the hand, so the
+	-- head's sharp edge leads instead of its flat side -- a guess at which
+	-- axis/direction is right since this can't be previewed; say the word
+	-- if it needs to go the other way or around a different axis.
+	tool.Grip = CFrame.Angles(0, 0, math.rad(90))
+
 	-- Strip any scripts the asset came with -- a Toolbox "pickaxe" could be
 	-- a full scripted kit assuming its own hit-detection, which we don't
 	-- want fighting with MiningService. CanQuery off so the held tool can't
