@@ -33,7 +33,7 @@ Config.Zones = {
 		GroundColor = Color3.fromRGB(94, 155, 76),
 		WallMaterial = Enum.Material.Rock,
 		WallColor = Color3.fromRGB(150, 140, 120),
-		OreCount = 30,
+		OreCount = 50,
 		OreTypes = {
 			{ Name = "Sandstone", Material = Enum.Material.Sandstone, Color = Color3.fromRGB(214, 187, 129), Multiplier = 1, Weight = 85, Glow = false },
 			{ Name = "Quartz", Material = Enum.Material.Glass, Color = Color3.fromRGB(240, 240, 250), Multiplier = 5, Weight = 15, Glow = true },
@@ -53,7 +53,7 @@ Config.Zones = {
 		GroundColor = Color3.fromRGB(70, 70, 78),
 		WallMaterial = Enum.Material.Basalt,
 		WallColor = Color3.fromRGB(45, 45, 52),
-		OreCount = 28,
+		OreCount = 45,
 		OreTypes = {
 			{ Name = "Iron Ore", Material = Enum.Material.Metal, Color = Color3.fromRGB(150, 150, 155), Multiplier = 1, Weight = 80, Glow = false },
 			{ Name = "Emerald", Material = Enum.Material.Glass, Color = Color3.fromRGB(60, 220, 120), Multiplier = 6, Weight = 20, Glow = true },
@@ -73,7 +73,7 @@ Config.Zones = {
 		GroundColor = Color3.fromRGB(45, 35, 60),
 		WallMaterial = Enum.Material.Slate,
 		WallColor = Color3.fromRGB(60, 45, 80),
-		OreCount = 30,
+		OreCount = 50,
 		OreTypes = {
 			{ Name = "Amethyst", Material = Enum.Material.Glass, Color = Color3.fromRGB(150, 90, 220), Multiplier = 1, Weight = 80, Glow = true },
 			{ Name = "Diamond", Material = Enum.Material.Ice, Color = Color3.fromRGB(190, 240, 250), Multiplier = 6, Weight = 20, Glow = true },
@@ -101,14 +101,14 @@ Config.Zones = {
 		GroundColor = Color3.fromRGB(20, 18, 20),
 		WallMaterial = Enum.Material.Basalt,
 		WallColor = Color3.fromRGB(15, 13, 15),
-		OreCount = 10, -- safe ore in the entrance area only
+		OreCount = 16, -- safe ore in the entrance area only
 		OreTypes = {
 			{ Name = "Obsidian Shard", Material = Enum.Material.Basalt, Color = Color3.fromRGB(40, 35, 45), Multiplier = 1, Weight = 100, Glow = false },
 		},
 		-- Rare ore is hand-placed on the treasure platform past the lava,
 		-- not part of the weighted OreTypes scatter.
 		RareOreType = { Name = "Cursed Ruby", Material = Enum.Material.Neon, Color = Color3.fromRGB(200, 20, 20), Multiplier = 8, Glow = true },
-		RareOreCount = 6,
+		RareOreCount = 10,
 		LavaColor = Color3.fromRGB(230, 90, 20),
 	},
 }
