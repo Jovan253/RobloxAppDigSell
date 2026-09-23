@@ -88,11 +88,9 @@ local function buildToolTemplate(tierIndex)
 		end
 	end
 
-	-- Grip left at default (no rotation override) -- two blind guesses at
-	-- this (Z, then X) both came out wrong, X made it visibly worse (handle
-	-- pointing sideways out of the hand). See TASKS.md / ask the user for
-	-- the live-tuned CFrame.Angles values found via the Command Bar instead
-	-- of guessing further blind.
+	-- Live-tuned by the user via the Command Bar (Y-axis rotation was the
+	-- one that mattered -- the earlier Z/X guesses were both the wrong axis).
+	tool.Grip = CFrame.Angles(math.rad(0), math.rad(90), math.rad(0))
 
 	-- Strip any scripts the asset came with -- a Toolbox "pickaxe" could be
 	-- a full scripted kit assuming its own hit-detection, which we don't
