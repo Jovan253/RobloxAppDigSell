@@ -29,7 +29,7 @@ User's ideas: fix the grey/flat map, spread zones/ores out more, more zones, mor
 - [x] Lava fall → teleport to last checkpoint + `ZoneToast` "you fell in" message
 - [x] Jumpscare Prank plumbing — `MarketplaceService` grant logic + `JumpscareEffect.client.luau` (flash effect; sound left blank, needs a real asset ID), gated behind `Config.JumpscareProductId` (currently nil)
 - [x] Playtest map/ore visuals live in Studio — confirmed "looks ok for most part" (2026-09-23)
-- [ ] Playtest the Dark Mines lava/parkour/checkpoint flow live — not tested yet
+- [x] Playtest the Dark Mines lava/parkour/checkpoint flow live — confirmed working (2026-09-23, across this and the following rounds' wall/sign fixes)
 - [ ] Create the "Jumpscare Prank" developer product in the Creator Dashboard, send the ID, so it can be wired into `Config.JumpscareProductId`
 - [ ] Find/set a real sound asset ID for the jumpscare effect (`JumpscareEffect.client.luau`'s `SoundId` is blank)
 - [ ] Gotcha if re-testing: `MiningService` only builds `MiningZones` if that folder doesn't already exist in Workspace — if Studio's Edit-mode Workspace somehow still has a leftover one from before, delete it manually or the old map will keep showing
@@ -62,7 +62,7 @@ User feedback: barrier text confirmed working (asked for it in round 3), grey vo
 - [x] Sign post still overlapped the board after the first fix (matched thickness but not vertical extent) — now stops exactly at the board's bottom edge, no overlap — confirmed fixed
 - [x] Dark Mines lava pit — side/back walls now extend well below floor level so the pit has continuous cave wall on its sides instead of open void (commit `b65afe0`) — confirmed good on the long sides
 - [x] Pit was still open void at the front/back ends (entrance drop-off and treasure-platform edge) — added matching end walls there too (commit `b0331a9`)
-- [ ] Playtest the pit end walls live in Studio — not tested yet
+- [x] Playtest the pit end walls live in Studio — confirmed, "looks great" (2026-09-23)
 
 ## Future ideas (not in MVP scope)
 
