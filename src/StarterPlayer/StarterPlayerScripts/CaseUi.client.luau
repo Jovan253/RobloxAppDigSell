@@ -114,7 +114,7 @@ title.Parent = panel
 -- actual result under the marker.
 local REEL_ITEM_WIDTH = 92
 local REEL_VISIBLE_WIDTH = 380
-local REEL_ITEM_COUNT = 24
+local REEL_ITEM_COUNT = 50
 
 local reelViewport = Instance.new("Frame")
 reelViewport.Name = "ReelViewport"
@@ -367,7 +367,14 @@ refreshOpenButton()
 local spinning = false
 
 local function buildReel(resultSkinName)
-	reelStrip:ClearAllChildren()
+	-- Not ClearAllChildren -- that would also destroy reelListLayout, which
+	-- is parented under reelStrip too, leaving every future reel with no
+	-- horizontal layout (items would all stack on top of each other at 0,0).
+	for _, child in reelStrip:GetChildren() do
+		if child.Name == "Item" then
+			child:Destroy()
+		end
+	end
 	reelStrip.Position = UDim2.new(0, 0, 0, 0)
 
 	for order = 1, REEL_ITEM_COUNT - 1 do
@@ -387,7 +394,7 @@ local function spinToResult(resultSkinName, isNew, refund)
 
 	local tween = TweenService:Create(
 		reelStrip,
-		TweenInfo.new(3.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
+		TweenInfo.new(7, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
 		{ Position = UDim2.new(0, targetX, 0, 0) }
 	)
 

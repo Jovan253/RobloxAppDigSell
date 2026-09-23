@@ -181,7 +181,7 @@ User feedback: discovering an ore type should stay automatic (mining marks it fo
 - [x] New `CaseService` (server) — `OpenCase` remote: validates/deducts Gems, weighted-random skin roll (same cumulative-roll pattern as ore), grants if new or refunds `CaseDuplicateRefund` Gems if a dupe, tells the client the result via `CaseResult`. `EquipSkin` remote validates ownership.
 - [x] `PickaxeToolService` extended: reacts to `PlayerData.EquippedSkin` same as `PickaxeTier`, recolors the equipped tool's parts to the skin color, and for `Sparkle`-tier skins adds a built-in `Sparkles` instance to the Handle (no Texture asset needed, sidesteps the invisible-ParticleEmitter bug hit earlier) instead of just a recolor
 - [x] New `CaseUi.client.luau` ("Cases" button / "C" key, gold-themed): horizontal spinning reel (client-built decorative strip, always lands on the server-committed result — nothing to fake by watching it spin) + "My Skins" inventory list (owned skins equippable, unowned show "???" + rarity)
-- [ ] Not yet playtested live
+- [x] Playtest live — case open/grant/equip all worked, but the reel showed no items and didn't visibly spin. Root cause: `buildReel` called `reelStrip:ClearAllChildren()`, which also destroyed the `UIListLayout` parented under `reelStrip` (it's a child too), so every subsequent reel had no horizontal layout and all items stacked on top of each other at (0,0). Fixed by only destroying children named "Item", leaving the layout instance alone. Also bumped the spin from 3.2s to 7s per feedback, and increased the item count (24→50) so the longer spin still reads as continuous motion.
 
 ## Immediate next steps
 
