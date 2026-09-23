@@ -144,14 +144,14 @@ Full design history in conversation; final decisions below. Staged like Dark Min
 - Fast Travel between hub/zones — user: zones aren't big enough yet to need it; revisit once zones grow (user wants them bigger eventually — noted as a future direction, not actionable now)
 - **Sell Shop** (mine ore → inventory → walk to sell instead of instant cash) — user's own idea, separate from Gems. Good pattern (AutoSeller gamepass tie-in), but changes the core loop's reward timing across a lot of already-tuned/tested code. Recommended and user agreed: own future round, doesn't block or depend on Gems either way.
 
-### Stage 1 (building now): ore expansion + Gem currency/earn + Collection Journal
-- [ ] Add 15 total ore types (5 zones x 3 tiers: Common/Uncommon/Rare) to `Config.luau`, each with a `Gems` value
-- [ ] `Config.CollectionBonusGems` for the first-time-per-type bonus
-- [ ] `DataService`: `Gems` + `CollectedOreTypes` on the profile, `AddGems`/`SetGems`, `MarkOreTypeCollected` (returns whether it was new)
-- [ ] `MiningService`: grant Gems + check collection bonus on ore break, `ZoneNotice` toast on first-time discovery
-- [ ] Gems readout in the HUD
-- [ ] Collection Journal UI panel (all 15 types, grouped by zone, collected/uncollected)
-- [ ] Playtest live
+### Stage 1 (built 2026-09-24): ore expansion + Gem currency/earn + Collection Journal
+- [x] Added 15 total ore types (5 zones x 3 tiers: Common/Uncommon/Rare) to `Config.luau`, each with a `Gems` value
+- [x] `Config.CollectionBonusGems` (10) for the first-time-per-type bonus
+- [x] `DataService`: `Gems` + `CollectedOreTypes` on the profile (with migration for pre-existing saves), `AddGems`/`SetGems`, `MarkOreTypeCollected`
+- [x] `MiningService`: grants Gems + checks collection bonus on ore break, `ZoneNotice` toast on first-time discovery
+- [x] Gems readout added to the HUD (`MainHud.client.luau`)
+- [x] Collection Journal UI panel (`JournalUi.client.luau`, "Journal" button / "J" key) — all 15 types grouped by zone, undiscovered ones show "???" instead of name/value
+- [ ] Playtest live — not tested yet
 
 ### Stage 2 (next round): Speed Boost + case-opening skins
 - [ ] Not started
