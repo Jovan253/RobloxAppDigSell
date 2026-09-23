@@ -162,7 +162,8 @@ User feedback: discovering an ore type should stay automatic (mining marks it fo
 - [x] New `CollectionService` (server) owns the claim RemoteEvent + reward lookup, kept separate from `MiningService`
 - [x] `MiningService` no longer auto-grants the discovery bonus, just marks discovery + toasts pointing at the Journal
 - [x] `JournalUi` rows get a Claim button (???/Claim +N/Claimed/-- states)
-- [ ] Playtest live — not tested yet
+- [x] Playtest live — confirmed working
+- [x] Journal didn't show per-mine Gems value on already-claimed rows (label text was only set in the unclaimed branches) — fixed, now shown regardless of claim state
 
 ### Stage 2 (next round): Speed Boost + case-opening skins
 - [ ] Not started
