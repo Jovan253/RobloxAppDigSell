@@ -1,7 +1,5 @@
 -- Plays when this client is the target of a Dark Mines "Jumpscare Prank"
--- purchase (see MarketplaceService.triggerJumpscarePrank). SoundId is left
--- blank -- swap it for a real jumpscare sound's asset ID once you have one
--- uploaded (needs to be an ID you own or a public rbxassetid://).
+-- purchase (see MarketplaceService.triggerJumpscarePrank).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -27,7 +25,7 @@ flash.Parent = screenGui
 
 local sound = Instance.new("Sound")
 sound.Name = "JumpscareSound"
-sound.SoundId = "" -- TODO: set to a real jumpscare sound asset ID
+sound.SoundId = "rbxassetid://139162107746216"
 sound.Volume = 1
 sound.Parent = screenGui
 
