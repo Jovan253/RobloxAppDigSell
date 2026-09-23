@@ -29,6 +29,14 @@ local DARK_MINES_PLATFORM_COUNT = 7
 local DARK_MINES_PLATFORM_X_OFFSET = 4 -- studs, left/right zigzag
 local DARK_MINES_PLATFORM_SIZE = Vector3.new(6, 1, 5)
 
+-- How far below normal floor level side/back walls extend. Only matters for
+-- Dark Mines: its lava sits well below floor height (see buildDarkMines),
+-- and without this the walls would stop at floor level, leaving open void
+-- on the sides of the pit instead of a continuous cave wall going down into
+-- it. Harmless for other zones -- the extra wall height is just hidden
+-- under their floor.
+local WALL_DEPTH_BELOW_FLOOR = 20
+
 local MiningService = {}
 
 local lastCheckpoint = {} -- [player] = { CFrame, Order }
@@ -214,12 +222,18 @@ local function buildWallsAndCeiling(zoneConfig, zoneFolder)
 	ceiling.Color = zoneConfig.WallColor
 	ceiling.Parent = zoneFolder
 
+	-- Walls extend from WALL_DEPTH_BELOW_FLOOR below the floor up to the
+	-- ceiling (top stays at `height`, same as before; only the bottom moved
+	-- down) so they still line up with the ceiling either way.
+	local wallHeight = height + WALL_DEPTH_BELOW_FLOOR
+	local wallCenterY = (height - WALL_DEPTH_BELOW_FLOOR) / 2
+
 	local function addWall(widthOffset, depthOffset, wallWidth, wallDepth)
 		local wall = Instance.new("Part")
 		wall.Name = "Wall"
 		wall.Anchored = true
-		wall.Size = ZoneGeometry.size(zoneConfig, wallWidth, wallDepth, height)
-		wall.CFrame = CFrame.new(ZoneGeometry.point(zoneConfig, widthOffset, depthOffset, height / 2))
+		wall.Size = ZoneGeometry.size(zoneConfig, wallWidth, wallDepth, wallHeight)
+		wall.CFrame = CFrame.new(ZoneGeometry.point(zoneConfig, widthOffset, depthOffset, wallCenterY))
 		wall.Material = zoneConfig.WallMaterial
 		wall.Color = zoneConfig.WallColor
 		wall.Parent = zoneFolder
@@ -239,16 +253,17 @@ local function buildZoneSign(zoneConfig, zoneFolder)
 	local depthOffset = zoneConfig.UnlockCost > 0 and 6 or zoneConfig.RoomSize.Z / 2
 	local position = ZoneGeometry.point(zoneConfig, 0, depthOffset, 0)
 
-	-- Thinner than the board (0.6 studs) on both horizontal axes so it can't
-	-- poke through the board's face on whichever axis ends up being "depth"
-	-- for this zone's orientation.
+	local boardHeight = 3
+	local boardCenterY = 6
+	local boardBottomY = boardCenterY - boardHeight / 2 -- post stops exactly here, no overlap
+
 	local post = Instance.new("Part")
 	post.Name = "SignPost"
 	post.Anchored = true
 	post.Material = Enum.Material.Wood
 	post.Color = Color3.fromRGB(92, 64, 40)
-	post.Size = Vector3.new(0.6, 7, 0.6)
-	post.CFrame = CFrame.new(position + Vector3.new(0, 3.5, 0))
+	post.Size = Vector3.new(0.6, boardBottomY, 0.6)
+	post.CFrame = CFrame.new(position + Vector3.new(0, boardBottomY / 2, 0))
 	post.Parent = zoneFolder
 
 	local board = Instance.new("Part")
@@ -259,8 +274,8 @@ local function buildZoneSign(zoneConfig, zoneFolder)
 	-- ZoneGeometry.size puts the "thin" (0.6) dimension on whichever world
 	-- axis is this zone's depth axis, so the board is always thin in the
 	-- direction you walk through it, not just thin in world Z.
-	board.Size = ZoneGeometry.size(zoneConfig, 8, 0.6, 3)
-	board.CFrame = CFrame.new(position + Vector3.new(0, 6, 0))
+	board.Size = ZoneGeometry.size(zoneConfig, 8, 0.6, boardHeight)
+	board.CFrame = CFrame.new(position + Vector3.new(0, boardCenterY, 0))
 	board.Parent = zoneFolder
 
 	-- Readable faces depend on orientation too: Front/Back (normal +-Z) for
