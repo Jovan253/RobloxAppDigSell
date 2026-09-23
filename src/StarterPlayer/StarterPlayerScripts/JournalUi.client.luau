@@ -215,20 +215,19 @@ local function refresh()
 			swatch.BackgroundTransparency = 0
 			label.TextColor3 = Color3.fromRGB(255, 255, 255)
 
+			label.Text = ("%s -- +%d Gems/mine"):format(oreType.Name, oreType.Gems or 0)
+
 			local claimGems = oreType.ClaimGems or 0
 			if claimed[oreType.Name] then
-				label.Text = oreType.Name
 				button.Text = "Claimed"
 				button.Active = false
 				button.BackgroundColor3 = OWNED_COLOR
 			elseif claimGems > 0 then
-				label.Text = ("%s -- +%d Gems/mine"):format(oreType.Name, oreType.Gems or 0)
 				button.Text = ("Claim +%d"):format(claimGems)
 				button.Active = true
 				button.BackgroundColor3 = AFFORDABLE_COLOR
 			else
 				-- Discovered, nothing to claim (e.g. Common tier).
-				label.Text = ("%s -- +%d Gems/mine"):format(oreType.Name, oreType.Gems or 0)
 				button.Text = "--"
 				button.Active = false
 				button.BackgroundColor3 = OWNED_COLOR
