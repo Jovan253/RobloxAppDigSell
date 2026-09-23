@@ -145,11 +145,8 @@ Config.CashProducts = {
 	{ ProductId = 3714204408, Name = "Huge Pack", Cash = 50000 },
 }
 
--- Dark Mines "Jumpscare Prank" developer product: create it in the Creator
--- Dashboard (Monetization > Developer Products) and paste its ID here.
--- Left nil until then -- MarketplaceService/ShopUi both skip it while nil,
--- so nothing breaks in the meantime.
-Config.JumpscareProductId = nil
+-- Dark Mines "Jumpscare Prank" developer product.
+Config.JumpscareProductId = 3714340075
 Config.JumpscarePrankRadius = 60 -- studs; players within this range of the buyer get jumpscared
 
 return Config
