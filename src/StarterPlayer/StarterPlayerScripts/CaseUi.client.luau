@@ -115,6 +115,12 @@ title.Parent = panel
 local REEL_ITEM_WIDTH = 92
 local REEL_VISIBLE_WIDTH = 380
 local REEL_ITEM_COUNT = 50
+-- The result lands short of the strip's end, not exactly on it, so a few
+-- more (decorative) items are still visible sliding past after it settles
+-- -- otherwise the strip would just dead-stop right at the last item, which
+-- doesn't read as a wheel that could keep going.
+local REEL_TRAILING_ITEMS = 8
+local REEL_LANDING_INDEX = REEL_ITEM_COUNT - REEL_TRAILING_ITEMS
 
 local reelViewport = Instance.new("Frame")
 reelViewport.Name = "ReelViewport"
@@ -377,19 +383,22 @@ local function buildReel(resultSkinName)
 	end
 	reelStrip.Position = UDim2.new(0, 0, 0, 0)
 
-	for order = 1, REEL_ITEM_COUNT - 1 do
-		addReelItem(Config.PickaxeSkins[math.random(1, #Config.PickaxeSkins)], order)
-	end
-
 	local resultSkin = SKIN_BY_NAME[resultSkinName]
-	addReelItem(resultSkin, REEL_ITEM_COUNT)
+	for order = 1, REEL_ITEM_COUNT do
+		if order == REEL_LANDING_INDEX then
+			addReelItem(resultSkin, order)
+		else
+			addReelItem(Config.PickaxeSkins[math.random(1, #Config.PickaxeSkins)], order)
+		end
+	end
 end
 
 local function spinToResult(resultSkinName, isNew, refund)
 	buildReel(resultSkinName)
 
-	-- Land the center of the last item under the marker (viewport center).
-	local landedCenterX = REEL_ITEM_WIDTH * (REEL_ITEM_COUNT - 1) + REEL_ITEM_WIDTH / 2
+	-- Land the center of the landing item under the marker (viewport
+	-- center) -- trailing items past it stay visible once it settles.
+	local landedCenterX = REEL_ITEM_WIDTH * (REEL_LANDING_INDEX - 1) + REEL_ITEM_WIDTH / 2
 	local targetX = -(landedCenterX - REEL_VISIBLE_WIDTH / 2)
 
 	local tween = TweenService:Create(
