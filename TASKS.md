@@ -87,7 +87,7 @@ User feedback after playing the live version: multiplayer server sizing, wanting
 - [x] Server size recommendation — cap Max Player Count in Game Settings (Basic Info) to roughly 20-30; this is a solo-optimization simulator, not a game that benefits from huge crowded servers. **User action needed**: set this in the Dashboard/Studio, no code involved.
 - [x] Ore count increase — Zone1/3: 30→50, Zone2: 28→45, Dark Mines entrance: 10→16, Dark Mines treasure: 6→10 (commit `90d8a76`)
 - [x] Pickaxe tool + swing + multi-hit mining — see design decision below
-- [ ] 4th zone ("Sky Ruins", South side, floating-platform parkour over a bottomless drop) — **not started**, still queued as the next round
+- [x] Sky Ruins (5th zone, South side, floating-platform parkour over a bottomless drop) — see "Sky Ruins + hub rework" section below
 
 **Design decision — multi-hit mining:** hits-required scales with pickaxe tier (fewer hits = better pickaxe), not just cash-per-hit. Wooden/Stone = 3 hits, Iron/Gold = 2, Diamond = 1 (instant), uniform across all ore types/zones (`Config.OreMaxHealth` + each tier's `Damage`).
 
@@ -102,6 +102,16 @@ User feedback after playing the live version: multiplayer server sizing, wanting
 - [x] Pickaxe crashed on equip — `PickaxeAsset` turned out to be a `Model`, not a `Tool` (`CanBeDropped` doesn't exist on a Model). Now builds a real Tool around the Model's contents, picking a Handle part and welding the rest to it (commit `f3f3f99`)
 - [x] Playtest the free-asset pickaxe + fixed particles live — confirmed working, "really cool"
 - [x] Grip orientation (sharp edge leading, not flat side) — two blind guesses (Z-axis, then X-axis) were both wrong, X actively broke it (handle stuck out sideways from the hand). Stopped guessing and had the user live-tune it via the Command Bar instead (much faster iteration loop than a code round-trip per guess) — found value was Y-axis, 90°, now baked into `PickaxeToolService.luau` (commit `2878d4a`)
+
+## Sky Ruins + hub rework (2026-09-23)
+
+User request: add Sky Ruins so all 4 hub sides are used, move spawn to hub center, make the hub bigger, and size each zone to exactly match a hub side so there's no gap.
+
+- [x] Hub grew 120x120 → 150x150; every spoke zone's width now matches the hub's side length exactly (150), zero gap on any side. Ore counts scaled up proportionally.
+- [x] Sky Ruins (Zone5, South side, 75000 to unlock — new top tier above Dark Mines) — safe entrance ore, open bottomless-drop gap (non-solid kill-trigger far below floor, not lava), zigzag jump platforms, 3-stage checkpoints, treasure platform with rare Sky Shard ore. Built via `ZoneGeometry` throughout (orientation-aware), unlike Dark Mines which stays hardcoded North-only.
+- [x] **Bug found and fixed while building this**: checkpoint tracking was keyed only by player, not by zone — invisible with one parkour zone, but with two (Dark Mines + Sky Ruins), falling in one before touching its checkpoints would've sent the player back to wherever they last checkpointed in the *other* zone. Checkpoints are now scoped per-zone. Generalized `setupLavaKillZone` into `setupFallKillZone` (zone-scoped lookup, caller-supplied message) so both zones share the same fall-recovery logic.
+- [x] Spawn moved to the hub's center (`EnvironmentService.setupSpawn`) — replaces any existing SpawnLocation with exactly one, since no hub side is left open as an entrance anymore.
+- [ ] Playtest all of the above live in Studio — not tested yet, and this was a large geometry change (verified by hand-tracing the coordinate math for zone/rectangle overlaps, not in-engine). Sky Ruins' platform spacing/void depth are a first pass like Dark Mines' were and may need tuning.
 
 ## Future ideas (not in MVP scope)
 
