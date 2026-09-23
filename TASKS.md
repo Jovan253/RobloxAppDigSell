@@ -57,6 +57,12 @@ User feedback: barrier text confirmed working (asked for it in round 3), grey vo
 - [x] Radial hub layout — Zone2 (West), Zone3 (East), Zone4/Dark Mines (North), South left open for spawn. Added `ZoneGeometry` (shared orientation-aware local-to-world transform) so MiningService/ZoneBarriers/EnvironmentService all agree on where each zone's entrance and footprint actually are; Dark Mines' own lava/parkour geometry stays hardcoded North-only (documented in `Config.luau`)
 - [x] Playtest both live in Studio — confirmed working; found one bug (sign post poking through the board), fixed same round (commit `4c82009`)
 
+## Follow-up round 5 (2026-09-23)
+
+- [x] Sign post still overlapped the board after the first fix (matched thickness but not vertical extent) — now stops exactly at the board's bottom edge, no overlap
+- [x] Dark Mines lava pit — side/back walls now extend well below floor level so the pit has continuous cave wall on its sides instead of open void (commit `b65afe0`)
+- [ ] Playtest both live in Studio — not tested yet
+
 ## Future ideas (not in MVP scope)
 
 - Auto-Mine gamepass — periodically auto-mines the nearest unlocked ore without clicking, for players who own it
