@@ -116,18 +116,45 @@ User request: add Sky Ruins so all 4 hub sides are used, move spawn to hub cente
 - [x] Removed the Sky Ruins mid-gap checkpoint per feedback (entrance + treasure only now; Dark Mines keeps its mid-checkpoint, untouched)
 - [x] Playtest the eased jump difficulty + checkpoint removal — confirmed, but now "too easy"
 - [x] Platforms now drift side-to-side (oscillating tween, randomized period/phase per platform) instead of sitting still, adding a timing element on top of jump distance — shared `addOscillatingPlatform` helper for both zones; Dark Mines' mid-checkpoint widened to cover the swing range since it's tied to a now-moving platform
-- [ ] Playtest the moving platforms live — not tested yet
+- [x] Playtest the moving platforms live — confirmed, "works a charm"
 
-## Future ideas (not in MVP scope)
+## Gem system (2026-09-24) — design finalized across two discussion rounds, building now
 
-- Auto-Mine gamepass — periodically auto-mines the nearest unlocked ore without clicking, for players who own it
-- Reskin the ore/mining assets to make a different game later (noted 2026-09-23, no action needed now)
-- Frozen Caverns (ice/slippery-movement zone) and Flooded Depths (underwater/breath-limited zone) — alternate 4th/5th zone concepts the user liked alongside Sky Ruins; Sky Ruins was picked for the next round, these could follow later
-- Gem system (agreed 2026-09-23, not built) — secondary currency, deliberately kept separate from what Cash already buys:
-  - Earn: primarily from mining **rare** ore types (the glowing ones — Quartz/Emerald/Diamond/Cursed Ruby), plus a small passive playtime trickle, plus a Gem Pack developer product for direct purchase
-  - Spend: permanent Speed Boost tiers (WalkSpeed, like Pickaxe tiers but for movement); Pets (flagged as a bigger feature on its own — following AI, rarity table, equip/inventory UI — not a quick add)
-  - Explicitly NOT another way to buy Pickaxe tiers/zones — "Shovels" in earlier discussion turned out to just mean Pickaxes (existing Cash-based system), not a new tool track, so no separate mechanic needed there
-- Wheel Spin (agreed 2026-09-23, not built) — daily-login mechanic, spin once per day for a prize (Cash, Gems, or a short-lived temporary speed boost); a reward delivery mechanism, not a Gem-spending feature
+Full design history in conversation; final decisions below. Staged like Dark Mines/Sky Ruins: build core system first, spends next round.
+
+**Earn:**
+- Ongoing trickle scaled by ore rarity tier (Common 0 / Uncommon 1 / Rare 3 gems per mine)
+- **Collection Journal** — one-time bonus (10 gems) the first time ANY ore type is ever mined; a Journal/Collection UI tab shows all types with collected/uncollected state. User: "players like to collect something, feel like they can achieve things."
+- Playtime trickle from the original design **dropped** — not reaffirmed in discussion, keeping scope tighter
+- Gem Pack developer product (direct Robux purchase) — fast-follow once we have a product ID, not blocking
+
+**More ore variety (user: "maybe we need more ores?"):** adding a 3rd "Uncommon" tier ore to all 5 zones (between existing Common/Rare), bringing total ore types from 10 to 15 — richer mining variety and a meatier Journal.
+
+**Spend, v1 (this round... next round, see below):**
+- Speed Boost tiers (WalkSpeed, like Pickaxe tiers but for movement) — agreed
+- Pickaxe **skins via cases** (not a direct shop) — user: spend gems to open a case with a horizontal spinning reveal animation, weighted-rarity pool of skins, **rarer skins get an attached particle effect** (not just recolors). This is real scope on its own (reveal UI + rarity table), not a quick add.
+
+**Spend, deferred to fast-follow rounds (not v1):**
+- Slap (Gem-gated version of the Jumpscare Prank pattern) — user idea, approved
+- Hover (parkour skip) — user idea, approved; as **consumable charges** (~10s each) rather than a permanent toggle, so it doesn't trivialize the parkour content
+- Lucky Charm (temporary boost to rare-ore drop weight) — user: "I like it"
+- Pets — already flagged as its own bigger feature (following AI, rarity table, equip UI)
+
+**Explicitly deferred, not v1:**
+- Fast Travel between hub/zones — user: zones aren't big enough yet to need it; revisit once zones grow (user wants them bigger eventually — noted as a future direction, not actionable now)
+- **Sell Shop** (mine ore → inventory → walk to sell instead of instant cash) — user's own idea, separate from Gems. Good pattern (AutoSeller gamepass tie-in), but changes the core loop's reward timing across a lot of already-tuned/tested code. Recommended and user agreed: own future round, doesn't block or depend on Gems either way.
+
+### Stage 1 (building now): ore expansion + Gem currency/earn + Collection Journal
+- [ ] Add 15 total ore types (5 zones x 3 tiers: Common/Uncommon/Rare) to `Config.luau`, each with a `Gems` value
+- [ ] `Config.CollectionBonusGems` for the first-time-per-type bonus
+- [ ] `DataService`: `Gems` + `CollectedOreTypes` on the profile, `AddGems`/`SetGems`, `MarkOreTypeCollected` (returns whether it was new)
+- [ ] `MiningService`: grant Gems + check collection bonus on ore break, `ZoneNotice` toast on first-time discovery
+- [ ] Gems readout in the HUD
+- [ ] Collection Journal UI panel (all 15 types, grouped by zone, collected/uncollected)
+- [ ] Playtest live
+
+### Stage 2 (next round): Speed Boost + case-opening skins
+- [ ] Not started
 
 ## Immediate next steps
 
