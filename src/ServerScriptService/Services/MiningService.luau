@@ -420,6 +420,24 @@ local function buildDarkMines(zoneConfig, zonesFolder)
 
 	setupLavaKillZone(lava, entranceCheckpointCFrame)
 
+	-- Cliff-face walls at both ends of the pit (where the entrance floor
+	-- drops off, and where the treasure platform's floor starts), extending
+	-- down to match the side walls -- otherwise those two ends were open
+	-- void even though the long sides had walls.
+	local function addPitEndWall(z)
+		local wall = Instance.new("Part")
+		wall.Name = "PitEndWall"
+		wall.Anchored = true
+		wall.Size = Vector3.new(size.X - 4, WALL_DEPTH_BELOW_FLOOR, 2)
+		wall.CFrame = CFrame.new(origin.X, origin.Y - WALL_DEPTH_BELOW_FLOOR / 2, z)
+		wall.Material = zoneConfig.WallMaterial
+		wall.Color = zoneConfig.WallColor
+		wall.Parent = zoneFolder
+	end
+
+	addPitEndWall(origin.Z + DARK_MINES_ENTRANCE_DEPTH)
+	addPitEndWall(origin.Z + DARK_MINES_ENTRANCE_DEPTH + DARK_MINES_LAVA_DEPTH)
+
 	-- Jump platforms across the lava, zigzagging left/right
 	local zStep = DARK_MINES_LAVA_DEPTH / (DARK_MINES_PLATFORM_COUNT + 1)
 	local midIndex = math.floor(DARK_MINES_PLATFORM_COUNT / 2) + 1
